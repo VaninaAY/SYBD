@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>776</width>
-    <height>596</height>
+    <width>735</width>
+    <height>591</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Система управления базами данных</string>
+   <string>Обработка данных о выставочных экспонатах.</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -24,7 +24,7 @@
        <attribute name="title">
         <string>Данные/таблицы</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
+       <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
          <widget class="QTabWidget" name="table_tab">
           <property name="currentIndex">
@@ -34,7 +34,7 @@
            <attribute name="title">
             <string>НИР</string>
            </attribute>
-           <layout class="QVBoxLayout" name="verticalLayout_4">
+           <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
              <widget class="QTableView" name="table_NIR">
               <property name="editTriggers">
@@ -43,32 +43,47 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="Button_delete">
-              <property name="text">
-               <string>Удалить строку</string>
-              </property>
-             </widget>
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <item>
+               <widget class="QPushButton" name="Button_delete">
+                <property name="text">
+                 <string>Удалить строку</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="Button_change">
+                <property name="text">
+                 <string>Изменить строку</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="Button_add">
+                <property name="text">
+                 <string>Добавить строку</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
             <item>
-             <widget class="QPushButton" name="Button_change">
-              <property name="text">
-               <string>Изменить</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="Button_add">
-              <property name="text">
-               <string>Добавить строку</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="Button_filter">
-              <property name="text">
-               <string>Фильтрация по расположению ВУЗа</string>
-              </property>
-             </widget>
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <item>
+               <widget class="QPushButton" name="Button_filter">
+                <property name="text">
+                 <string>Фильтрация по расположению ВУЗа</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="Button_filter_2">
+                <property name="text">
+                 <string>Отмена фильтрации</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
           </widget>
@@ -103,7 +118,11 @@
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout">
             <item>
-             <widget class="QTableView" name="table_VUZ"/>
+             <widget class="QTableView" name="table_VUZ">
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -113,7 +132,11 @@
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_2">
             <item>
-             <widget class="QTableView" name="table_GRNTI"/>
+             <widget class="QTableView" name="table_GRNTI">
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>

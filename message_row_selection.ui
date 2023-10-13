@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>457</width>
+    <width>675</width>
     <height>231</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>сообщение об ошибке</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -25,7 +25,7 @@
       <enum>Qt::LeftToRight</enum>
      </property>
      <property name="text">
-      <string>Для того, чтобы удалить строку, надо ее выделить</string>
+      <string>Для того, чтобы выполнить данное действие необходимо выделить нужную строку</string>
      </property>
     </widget>
    </item>

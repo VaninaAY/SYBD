@@ -50,7 +50,7 @@ def duplicate_processing(cur):
 
 def creat_pr(cur):
     create_tbl = '''CREATE TABLE NIR_new (
-        codvuz INTEGER NOT NULL,
+        codvuz INTEGER,
         z2 TEXT,
         'type' TEXT ,
         regnumber TEXT ,
@@ -65,9 +65,7 @@ def creat_pr(cur):
     )'''
     cur.execute(create_tbl)
 
-    insert_data = '''INSERT INTO NIR_new ('codvuz', 'z2', 'type', 'regnumber', 'subject', 'grnti', 'bossname', 'bosstitle', 'exhitype', 'vystavki', 'exponat')
-    SELECT 'codvuz', 'z2', 'type', 'regnumber', 'subject', 'grnti', 'bossname', 'bosstitle', 'exhitype', 'vystavki', 'exponat'
-    FROM НИР'''
+    insert_data = '''INSERT INTO NIR_new SELECT * FROM НИР'''
     cur.execute(insert_data)
 
     delete_NIR_old = 'DROP TABLE НИР'
