@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>479</width>
-    <height>213</height>
+    <height>212</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,6 +25,16 @@
       <string>Вы действительно хотите удалить выделенную строку?</string>
      </property>
     </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Вы выделили строку с параметрами:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTextBrowser" name="textBrowser_del"/>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">

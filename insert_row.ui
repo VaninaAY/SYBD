@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>714</width>
-    <height>437</height>
+    <width>512</width>
+    <height>592</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,7 +29,24 @@
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QComboBox" name="comboBox_codvuz"/>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QComboBox" name="comboBox_codvuz"/>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>88</width>
+           <height>18</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
@@ -54,7 +71,7 @@
         </font>
        </property>
        <property name="text">
-        <string>тематический план *</string>
+        <string>форма организации *</string>
        </property>
       </widget>
      </item>
@@ -74,13 +91,34 @@
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QLineEdit" name="lineEdit_regnum">
-       <property name="maxLength">
-        <number>32834</number>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <item>
+        <widget class="QLineEdit" name="lineEdit_regnum">
+         <property name="maxLength">
+          <number>10</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </item>
-     <item row="4" column="0">
+    </layout>
+   </item>
+   <item>
+    <layout class="QFormLayout" name="formLayout_2">
+     <item row="0" column="0">
       <widget class="QLabel" name="label_3">
        <property name="font">
         <font>
@@ -92,10 +130,10 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
-      <widget class="QLineEdit" name="lineEdit_subject"/>
+     <item row="0" column="1">
+      <widget class="QTextEdit" name="lineEdit_subject"/>
      </item>
-     <item row="5" column="0">
+     <item row="1" column="0">
       <widget class="QLabel" name="label_6">
        <property name="font">
         <font>
@@ -107,119 +145,60 @@
        </property>
       </widget>
      </item>
-     <item row="5" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout">
+     <item row="1" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
-        <widget class="QLineEdit" name="lineEdit_grnti1_1">
+        <widget class="QLineEdit" name="lineEdit_grnti1">
          <property name="inputMask">
-          <string/>
+          <string>00.00.00</string>
          </property>
          <property name="text">
-          <string/>
+          <string>..</string>
          </property>
          <property name="maxLength">
-          <number>32767</number>
+          <number>8</number>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_12">
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
+        <widget class="QLineEdit" name="lineEdit_grnti2">
+         <property name="inputMask">
+          <string>00.00.00</string>
          </property>
          <property name="text">
-          <string>.</string>
+          <string>..</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_grnti1_2">
-         <property name="text">
-          <string/>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
-        </widget>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>38</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
        <item>
-        <widget class="QLabel" name="label_13">
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
-         <property name="text">
-          <string>.</string>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>188</width>
+           <height>20</height>
+          </size>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_grnti1_3">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_14">
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>;</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_grnti2_1">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_17">
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>.</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_grnti2_2">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_16">
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>.</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_grnti2_3">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
+        </spacer>
        </item>
       </layout>
      </item>
-     <item row="6" column="0">
+     <item row="2" column="0">
       <widget class="QLabel" name="label_7">
        <property name="font">
         <font>
@@ -231,10 +210,10 @@
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
+     <item row="2" column="1">
       <widget class="QLineEdit" name="lineEdit_bossname"/>
      </item>
-     <item row="7" column="0">
+     <item row="3" column="0">
       <widget class="QLabel" name="label_9">
        <property name="font">
         <font>
@@ -246,10 +225,10 @@
        </property>
       </widget>
      </item>
-     <item row="7" column="1">
+     <item row="3" column="1">
       <widget class="QLineEdit" name="lineEdit_bosstitle"/>
      </item>
-     <item row="8" column="0">
+     <item row="4" column="0">
       <widget class="QLabel" name="label_8">
        <property name="font">
         <font>
@@ -261,10 +240,10 @@
        </property>
       </widget>
      </item>
-     <item row="8" column="1">
+     <item row="4" column="1">
       <widget class="QComboBox" name="comboBox_exhitype"/>
      </item>
-     <item row="9" column="0">
+     <item row="5" column="0">
       <widget class="QLabel" name="label_10">
        <property name="font">
         <font>
@@ -276,10 +255,10 @@
        </property>
       </widget>
      </item>
-     <item row="9" column="1">
+     <item row="5" column="1">
       <widget class="QLineEdit" name="lineEdit_vystavki"/>
      </item>
-     <item row="10" column="0">
+     <item row="6" column="0">
       <widget class="QLabel" name="label_11">
        <property name="font">
         <font>
@@ -291,46 +270,50 @@
        </property>
       </widget>
      </item>
-     <item row="10" column="1">
+     <item row="6" column="1">
       <widget class="QLineEdit" name="lineEdit_exponat"/>
      </item>
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
-      <spacer name="horizontalSpacer">
+      <spacer name="horizontalSpacer_4">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>268</width>
+         <width>40</width>
          <height>20</height>
         </size>
        </property>
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="Button_cancel">
-       <property name="text">
-        <string>Отмена</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="Button_reset">
-       <property name="text">
-        <string>Сбросить</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="Button_add">
-       <property name="text">
-        <string>Добавить/Изменить </string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QPushButton" name="Button_cancel">
+         <property name="text">
+          <string>Отмена</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button_reset">
+         <property name="text">
+          <string>Сбросить</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button_add">
+         <property name="text">
+          <string>Добавить/Изменить </string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </item>

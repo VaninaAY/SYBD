@@ -103,8 +103,31 @@ def processing_column_grnti(cur):
         cur.execute("UPDATE НИР SET grnti = (?) WHERE codvuz=(?) AND regnumber=(?) AND subject=(?)",
                     [grnti, row[0], row[3], row[4]])
 
+def delete_absent_id(cur):
+    flag = 0
+    while flag == 0:
+        cur.execute("select НИР.codvuz from НИР left join ВУЗы on ВУЗы.codvuz = НИР.codvuz where ВУЗы.codvuz is null group by НИР.codvuz")
+        uniq_absent_id = cur.fetchall()
+        if len(uniq_absent_id) == 0:
+            break
+        for i, j in enumerate(uniq_absent_id):
+            id = j[0]
+            new_id = id - 1
+            cur.execute(f'''UPDATE НИР SET codvuz = {new_id} WHERE codvuz={id}''')
+
+# def delete_absent_id(cur):
+#     flag = 0
+#     while flag == 0:
+#         cur.execute("select НИР.код_ВУЗа from НИР left join ВУЗы on ВУЗы.код_ВУЗа = НИР.код_ВУЗа where ВУЗы.код_ВУЗа is null group by НИР.код_ВУЗа")
+#         uniq_absent_id = cur.fetchall()
+#         if len(uniq_absent_id) == 0:
+#             break
+#         for i, j in enumerate(uniq_absent_id):
+#             id = j[0]
+#             new_id = id - 1
+#             cur.execute(f'''UPDATE НИР SET код_ВУЗа = {new_id} WHERE код_ВУЗа={id}''')
 def rename_columns(cur):
-    new_columns_NIR = ['код ВУЗа', 'ВУЗ кратко', 'НТП', 'рег. номер', 'проект', 'код ГРНТИ',
+    new_columns_NIR = ['код ВУЗа', 'ВУЗ кратко', 'Форма орг-и', 'рег. номер', 'проект', 'код ГРНТИ',
                        'руководитель', 'должность рук.', 'наличие экспаната', 'выставка', 'название экспаната']
     new_columns_VUZ = ['код ВУЗа', 'ВУЗ', 'ВУЗ полный', 'ВУЗ кратко', 'фед. округ', 'город',
                        'статус', 'номер области', 'область', 'гр_вед', 'проф']
@@ -126,7 +149,6 @@ def rename_columns(cur):
 
 
 
-
 # Создание базы данных без обработки
 path_to_xls_files = r"C:\Users\vanin\Documents\институт\4 курс\7 семестр\СУБД\СУБД лаб FOR STUD\файлы на 2023\по вариантам XLS\v6 выст"
 path_to_db = r'C:\Users\vanin\Documents\институт\4 курс\7 семестр\СУБД\project\SYBD.db'
@@ -138,9 +160,11 @@ cur = conn.cursor()
 
 duplicate_processing(cur)
 # creat_pr(cur)
-fill_z2(cur)
 processing_column_grnti(cur)
+delete_absent_id(cur)
+fill_z2(cur)
 rename_columns(cur)
+
 
 cur.close()
 conn.commit()
