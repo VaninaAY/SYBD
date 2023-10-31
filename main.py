@@ -5,7 +5,12 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtSql import *
 from PyQt6.QtWidgets import QAbstractItemView
 import sqlite3
-from PyQt6.QtCore import QItemSelectionModel
+from PyQt6.QtWidgets import *
+from PyQt6 import QtWidgets, QtCore
+from PyQt6.QtCore import *
+
+# from PyQt6.QtCore import QItemSelectionModel, QItemSelection
+from PyQt6.QtCore import QModelIndex, QItemSelection, QItemSelectionModel
 
 # Подклюючение к базе данных и проверка ее наличия
 def connect_db(db_file):
@@ -20,9 +25,11 @@ def connect_db(db_file):
 def show_table(tbl_name, widget_name, column_width):
     table = QSqlTableModel()
     table.setTable(tbl_name)
+    # table.setLimit(-1)
+    # table.setFetchSize(-1)
+    # table.set
     table.select()
     getattr(form, widget_name).setModel(table)
-    getattr(form, widget_name).setSortingEnabled(True)
     for num_column, width in enumerate(column_width):
         getattr(form, widget_name).setColumnWidth(num_column, width)
 
@@ -140,7 +147,7 @@ def row_validation(task):
         cursor.execute(query, params)
         result = cursor.fetchone()[0]
         if not result == 0:
-            return False, 'Такие уникальны данные (код ВУЗа, Форма организации, регестрационный номер) уже есть. Попробуйте сменить регестрационный номер'
+            return False, 'Такие уникальны данные (код ВУЗа, Форма организации, регистрационный номер) уже есть. Попробуйте сменить регистрационный номер'
         cursor.close()
         conn.close()
 
@@ -152,31 +159,20 @@ def row_validation(task):
                 return False, f"Не заполнено текстовое поле '{error_vystavki[num]}'"
 
     # # проверка кода грнти
-    cod_grnti1 = form_row_add.lineEdit_grnti1.text().split('.')
-    cod_grnti2 = form_row_add.lineEdit_grnti2.text().split('.')
-    if len(cod_grnti1[0]) == 2 and len(cod_grnti1[1]) == 2:
-        total_cod_grnti = '.'.join(cod_grnti1[:2])
-        if len(cod_grnti1[2]) == 1:
-            return False, 'Поле ГРНТИ введено не верно2'
-        elif len(cod_grnti1[2]) == 2:
-            total_cod_grnti += '.' + cod_grnti1[2]
-    else:
-        return False, 'Поле ГРНТИ введено не верно1'
+    cod_grnti1 = form_row_add.lineEdit_grnti1.text()
+    cod_grnti2 = form_row_add.lineEdit_grnti2.text()
+    if len(cod_grnti1) != 8:
+        return False, 'Первое поле ГРНТИ введено не верно'
 
-    if len(cod_grnti2[0]) == 1 or len(cod_grnti2[1]) == 1 or len(cod_grnti2[2]) == 1:
-        return False, 'Поле ГРНТИ введено не верно3'
-    elif len(cod_grnti2[0]) == 2 and len(cod_grnti2[1]) == 2:
-        total_cod_grnti += ';' + '.'.join(cod_grnti2[:2])
-        if len(cod_grnti2[2]) == 2:
-            total_cod_grnti += '.' + cod_grnti2[2]
-    elif len(cod_grnti2[0]) == 0 and len(cod_grnti2[1]) == 0:
-        if len(cod_grnti2[2]) == 2:
-            return False, 'Поле ГРНТИ введено не верно4'
+    if len(cod_grnti2) == 2:
+        total_cod_grnti = cod_grnti1
+    elif len(cod_grnti2) == 8:
+        total_cod_grnti = cod_grnti1 + ';' + cod_grnti2
     else:
-        return False, 'Поле ГРНТИ введено не верно5'
+        return False, 'Второе поле ГРНТИ введено не верно'
     return True, total_cod_grnti
 
-def insert_row_in_bd(task):
+def insert_row_in_bd(task, num_row):
     flag, text = row_validation(task)
     if flag:
         if form_row_add.comboBox_type.currentText() == 'Тематический план':
@@ -195,18 +191,22 @@ def insert_row_in_bd(task):
         if task == 'insert':
             query.exec(f'''INSERT INTO НИР VALUES {values_new_row}''')
         elif task == 'update':
-            print('Обновление строки')
             query.exec(
                 f"""UPDATE НИР SET "ВУЗ кратко" = "{values_new_row[1]}", проект = "{values_new_row[4]}",  "код ГРНТИ" = "{values_new_row[5]}", 
                                 руководитель = "{values_new_row[6]}", "должность рук." = "{values_new_row[7]}",
                                 "наличие экспаната" = "{values_new_row[8]}", выставка = "{values_new_row[9]}", "название экспаната" = "{values_new_row[10]}"
                                 WHERE "код ВУЗа" = "{values_new_row[0]}"  AND "Форма орг-и" = "{values_new_row[2]}" AND "рег. номер" = "{values_new_row[3]}"
                                 """)
-        print('Что то сделалось')
-        show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
+
+
+            show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
+            cmb_sort_selected = form.comboBox_sort.currentText()
+            form.comboBox_sort.setCurrentText('Без сортировки')
+            form.comboBox_sort.setCurrentText(cmb_sort_selected)
         close_form_row_add()
 
-        # подсветить вставленную строку
+        # Выделение сторки
+        form.table_NIR.selectRow(num_row)
 
     else:
         window_message_add_row.show()
@@ -224,10 +224,11 @@ def reset_form_adding_row():
         getattr(form_row_add, lineEdit).clear()
     form_row_add.lineEdit_subject.clear()
 def AddRow():
+    form.comboBox_sort.setCurrentText('Без сортировки')
     window_row_add.show()
     form_row_add.Button_cancel.clicked.connect(close_form_row_add)
     form_row_add.Button_add.clicked.disconnect(nothing)
-    form_row_add.Button_add.clicked.connect(lambda: insert_row_in_bd('insert'))
+    form_row_add.Button_add.clicked.connect(lambda: insert_row_in_bd('insert', form.table_NIR.model().rowCount()))
     form_row_add.Button_reset.clicked.disconnect(nothing)
     form_row_add.Button_reset.clicked.connect(reset_form_adding_row)
 
@@ -255,7 +256,9 @@ def ChangeRow():
         window_row_add.show()
         form_row_add.Button_cancel.clicked.connect(close_form_row_add)
         form_row_add.Button_add.clicked.disconnect(nothing)
-        form_row_add.Button_add.clicked.connect(lambda: insert_row_in_bd('update'))
+        for index in selected_row:
+            row_index = index.row()
+        form_row_add.Button_add.clicked.connect(lambda: insert_row_in_bd('update', row_index))
         form_row_add.Button_reset.clicked.disconnect(nothing)
         form_row_add.Button_reset.clicked.connect(reset_form_chengin_row)
 
@@ -307,6 +310,22 @@ def ChangeRow():
         window_message_select_row.show()
         form_message_select_row.Button_ok.clicked.connect(window_message_select_row.close)
 
+def on_combobox_sort_changed(index):
+    selected_value = form.comboBox_sort.currentText()
+    if selected_value == 'Без сортировки':
+        form.table_NIR.setSortingEnabled(False)
+        show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
+    elif selected_value == 'Сортировка по столбцам':
+        show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
+        form.table_NIR.setSortingEnabled(True)
+    elif selected_value == 'Сортировка по ключу':
+        show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
+        query = QSqlQuery()
+        query.exec('SELECT * FROM НИР ORDER BY "код ВУЗа" ASC, "Форма орг-и" ASC, "рег. номер" ASC')
+        model = QSqlTableModel()
+        model.setQuery(query)
+        form.table_NIR.setModel(model)
+        
 def nothing():
     pass
 
@@ -372,6 +391,9 @@ fill_combobox('код ВУЗа','ВУЗы', 'comboBox_codvuz', form_row_add)
 fill_combobox('ВУЗ кратко', 'ВУЗы', 'comboBox_z2', form_row_add)
 form_row_add.comboBox_exhitype.addItems([None, 'Есть', 'Нет', 'Планируется'])
 form_row_add.comboBox_type.addItems([None, 'Тематический план', 'НТП'])
+
+form.comboBox_sort.addItems(['Без сортировки','Сортировка по столбцам','Сортировка по ключу'])
+form.comboBox_sort.currentIndexChanged.connect(on_combobox_sort_changed)
 
 window.show()
 app.exec()
