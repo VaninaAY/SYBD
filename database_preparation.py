@@ -115,17 +115,6 @@ def delete_absent_id(cur):
             new_id = id - 1
             cur.execute(f'''UPDATE НИР SET codvuz = {new_id} WHERE codvuz={id}''')
 
-# def delete_absent_id(cur):
-#     flag = 0
-#     while flag == 0:
-#         cur.execute("select НИР.код_ВУЗа from НИР left join ВУЗы on ВУЗы.код_ВУЗа = НИР.код_ВУЗа where ВУЗы.код_ВУЗа is null group by НИР.код_ВУЗа")
-#         uniq_absent_id = cur.fetchall()
-#         if len(uniq_absent_id) == 0:
-#             break
-#         for i, j in enumerate(uniq_absent_id):
-#             id = j[0]
-#             new_id = id - 1
-#             cur.execute(f'''UPDATE НИР SET код_ВУЗа = {new_id} WHERE код_ВУЗа={id}''')
 def rename_columns(cur):
     new_columns_NIR = ['код ВУЗа', 'ВУЗ кратко', 'Форма орг-и', 'рег. номер', 'проект', 'код ГРНТИ',
                        'руководитель', 'должность рук.', 'наличие экспаната', 'выставка', 'название экспаната']
