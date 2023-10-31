@@ -455,7 +455,7 @@ def Filter():
     fill_combobox_for_filer('фед. округ', 'federal_district')
     fill_combobox_for_filer('область', 'region')
     fill_combobox_for_filer('город', 'city')
-    fill_combobox_for_filer('ВУЗ_кратко', 'VUZ')
+    fill_combobox_for_filer('ВУЗ кратко', 'VUZ')
     form_filter.vyst.addItems([None, 'Есть', 'Нет', 'Планируется'])
 
     form_filter.federal_district.currentTextChanged.connect(filter_Save_func)
