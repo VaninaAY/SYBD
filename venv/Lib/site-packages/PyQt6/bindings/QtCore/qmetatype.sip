@@ -182,6 +182,9 @@ public:
 %If (Qt_6_5_0 -)
     bool isDestructible() const;
 %End
+%If (Qt_6_6_0 -)
+    QMetaType underlyingType() const;
+%End
 
 private:
     QMetaType(const QMetaType &);

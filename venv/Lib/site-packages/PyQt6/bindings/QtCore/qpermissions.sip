@@ -286,6 +286,25 @@ public:
     QBluetoothPermission();
     QBluetoothPermission(const QBluetoothPermission &other);
     ~QBluetoothPermission();
+%If (Qt_6_6_0 -)
+
+    enum CommunicationMode
+    {
+        Access,
+        Advertise,
+        Default,
+    };
+
+%End
+%If (Qt_6_6_0 -)
+    typedef QFlags<QBluetoothPermission::CommunicationMode> CommunicationModes;
+%End
+%If (Qt_6_6_0 -)
+    void setCommunicationModes(QBluetoothPermission::CommunicationModes modes);
+%End
+%If (Qt_6_6_0 -)
+    QBluetoothPermission::CommunicationModes communicationModes() const;
+%End
 };
 
 %End

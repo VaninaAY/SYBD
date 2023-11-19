@@ -404,6 +404,18 @@ public:
 %If (Qt_6_5_0 -)
         Obolo,
 %End
+%If (Qt_6_6_0 -)
+        Baluchi,
+%End
+%If (Qt_6_6_0 -)
+        Ligurian,
+%End
+%If (Qt_6_6_0 -)
+        Rohingya,
+%End
+%If (Qt_6_6_0 -)
+        Torwali,
+%End
     };
 
     enum Country
@@ -948,6 +960,9 @@ public:
         BanglaScript,
         MendeScript,
         OdiaScript,
+%If (Qt_6_6_0 -)
+        HanifiScript,
+%End
     };
 
     enum CurrencySymbolFormat

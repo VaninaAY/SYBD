@@ -169,6 +169,9 @@ public:
     bool isValid() const;
     bool isScoped() const;
     const char *enumName() const;
+%If (Qt_6_6_0 -)
+    QMetaType metaType() const;
+%End
 };
 
 class QMetaProperty

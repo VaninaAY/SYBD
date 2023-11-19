@@ -51,7 +51,12 @@ class QCamera : QObject
         {0, 0, -1, 12},
     #endif
         {sipName_QSoundEffect, &sipType_QSoundEffect, -1, 13},
-        {sipName_QVideoSink, &sipType_QVideoSink, -1, -1},
+        {sipName_QVideoSink, &sipType_QVideoSink, -1, 14},
+    #if QT_VERSION >= 0x060600
+        {sipName_QWindowCapture, &sipType_QWindowCapture, -1, -1},
+    #else
+        {0, 0, -1, -1},
+    #endif
     };
     
     int i = 0;

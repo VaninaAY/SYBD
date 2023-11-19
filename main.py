@@ -147,6 +147,8 @@ def row_validation(task):
         cursor.execute(query, params)
         result = cursor.fetchone()[0]
         if not result == 0:
+            cursor.close()
+            conn.close()
             return False, 'Такие уникальны данные (код ВУЗа, Форма организации, регистрационный номер) уже есть. Попробуйте сменить регистрационный номер'
         cursor.close()
         conn.close()
@@ -333,10 +335,7 @@ def nothing():
 #############################################################################################
 #############################################################################################
 
-def request_for_filter():
-    conn = sqlite3.connect('SYBD.db')
-    cursor = conn.cursor()
-
+def get_filter():
     federal_district = form_filter.federal_district.currentText()
     region = form_filter.region.currentText()
     city = form_filter.city.currentText()
@@ -360,17 +359,26 @@ def request_for_filter():
         if vyst == 'Планируется':
             request += f'AND "наличие экспаната" = "П"'
     if VUZ != "":
-        request += f'AND "ВУЗ кратко" = "{VUZ}" '
+        request += f'AND НИР."ВУЗ кратко" = "{VUZ}" '
     if grnti != "":
         request += f'AND "код ГРНТИ" LIKE "{grnti}%" '
+
+    return request
+
+def request_for_filter():
+    conn = sqlite3.connect('SYBD.db')
+    cursor = conn.cursor()
+
+    request = get_filter()
+
     if request == "":
         cursor.execute("""SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа]""")
     else:
-        print(f'''SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request}''')
         request = request.replace("AND", "", 1)
         cursor.execute(f'''SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request}''')
 
     data = cursor.fetchall()
+    cursor.close()
     conn.close()
 
     return data
@@ -391,11 +399,33 @@ def filter_Save_func():
     data = request_for_filter()
     show_filter_table(data)
 
+def save_for_filter():
+    try:
+        new_table = form_filter.table_name.text()
+        if new_table == "":
+            form_filter.label_name.setStyleSheet("color: red;")
+            form_filter.label_name.setText("Ошибка! Введите имя таблицы")
+            return
+        query = QSqlQuery(db)
+        request = get_filter()
+        query_str = ""
+        if request == "":
+            query_str = f'CREATE TABLE "{new_table}" AS SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа];'
+        else:
+            request = request.replace("AND", "", 1)
+            query_str = f'CREATE TABLE "{new_table}" AS SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request};'
+        query.exec(query_str)
+        print(query_str)
+        print("OK")
+        form_filter.label_name.setStyleSheet("color: black;")
+        form_filter.label_name.setText("")
+    except sqlite3.Error as e:
+        print(f"Произошла ошибка: {e}")
+
 def filter_cancel():
     getattr(form_filter, 'federal_district').setCurrentIndex(0)
     getattr(form_filter, 'city').setCurrentIndex(0)
     getattr(form_filter, 'region').setCurrentIndex(0)
-    #filter_Save_func()
     form.setupUi(window)
     show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
     show_table('ВУЗы', "table_VUZ", VUZ_COLUMN_WIDTH)
@@ -411,12 +441,13 @@ def filter_cancel():
     form.comboBox_sort.currentIndexChanged.connect(on_combobox_sort_changed)
     window_filer.close()
 
-def fill_combobox_for_filer(column, widget):
+def fill_combobox_for_filer(column, widget, request):
     query = QSqlQuery()
-    if column == "ВУЗ кратко":
-        query.exec(f'SELECT DISTINCT "{column}" FROM НИР')
+    if column == 'ВУЗ кратко':
+        query.exec(f'SELECT DISTINCT НИР."{column}" FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] {request}')
     else:
-        query.exec(f'SELECT DISTINCT "{column}" FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа]')
+        query.exec(f'SELECT DISTINCT "{column}" FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] {request}')
+    print(f'SELECT DISTINCT "{column}" FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] {request}')
     distinct_values = [None]
     getattr(form_filter, widget).clear()
     while query.next():
@@ -424,6 +455,7 @@ def fill_combobox_for_filer(column, widget):
     getattr(form_filter, widget).addItems(distinct_values)
 
 def func_for_region():
+    filter_Save_func()
     region = form_filter.region.currentText()
     if region == "":
         return
@@ -434,9 +466,15 @@ def func_for_region():
     str_region = str(res[0])
     str_region = str_region[2:len(str_region)-3]
     form_filter.federal_district.setCurrentText(str_region)
+    cursor.close()
     conn.close()
+    req = f'WHERE "область" = "{region}"'
+    fill_combobox_for_filer('город', 'city', req)
+    fill_combobox_for_filer('ВУЗ кратко', 'VUZ', req)
+    form_filter.region.setCurrentText(region)
 
 def func_for_city():
+    filter_Save_func()
     city = form_filter.city.currentText()
     if city == "":
         return
@@ -448,24 +486,53 @@ def func_for_city():
     str_region = str(res[0])
     str_region = str_region[2:len(str_region)-3]
     form_filter.region.setCurrentText(str_region)
+    form_filter.city.setCurrentText(city)
+    cursor.close()
     conn.close()
+    req = f'WHERE "город" = "{city}"'
+    fill_combobox_for_filer('ВУЗ кратко', 'VUZ', req)
+
+def func_for_federal_district():
+    filter_Save_func()
+    fed = form_filter.federal_district.currentText()
+    req = f'WHERE "фед. округ" = "{fed}"'
+    fill_combobox_for_filer('область', 'region', req)
+    fill_combobox_for_filer('город', 'city', req)
+    fill_combobox_for_filer('ВУЗ кратко', 'VUZ', req)
+
+def func_for_VUZ():
+    VUZ = form_filter.VUZ.currentText()
+    if VUZ == "":
+        return
+    conn = sqlite3.connect('SYBD.db')
+    cursor = conn.cursor()
+    cursor.execute(f'''SELECT DISTINCT "город" FROM ВУЗы WHERE "ВУЗ кратко" = "{VUZ}"''')
+    res = cursor.fetchall()
+    str_city = str(res[0])
+    str_city = str_city[2:len(str_city)-3]
+    form_filter.city.setCurrentText(str_city)
+    cursor.close()
+    conn.close()
+    filter_Save_func()
+    form_filter.VUZ.setCurrentText(VUZ)
 
 def Filter():
     window_filer.show()
-    fill_combobox_for_filer('фед. округ', 'federal_district')
-    fill_combobox_for_filer('область', 'region')
-    fill_combobox_for_filer('город', 'city')
-    fill_combobox_for_filer('ВУЗ кратко', 'VUZ')
-    form_filter.vyst.addItems([None, 'Есть', 'Нет', 'Планируется'])
 
-    form_filter.federal_district.currentTextChanged.connect(filter_Save_func)
-    form_filter.VUZ.currentTextChanged.connect(filter_Save_func)
-    form_filter.VUZ.currentTextChanged.connect(filter_Save_func)
+    fill_combobox_for_filer('фед. округ', 'federal_district', "")
+    fill_combobox_for_filer('область', 'region', '')
+    fill_combobox_for_filer('город', 'city', '')
+    fill_combobox_for_filer('ВУЗ кратко', 'VUZ', '')
+    if form_filter.vyst.count() == 0:
+        form_filter.vyst.addItems([None, 'Есть', 'Нет', 'Планируется'])
+
+    form_filter.federal_district.currentTextChanged.connect(func_for_federal_district)
+    form_filter.VUZ.currentTextChanged.connect(func_for_VUZ)
     form_filter.region.currentTextChanged.connect(func_for_region)
     form_filter.city.currentTextChanged.connect(func_for_city)
     form_filter.vyst.currentTextChanged.connect(filter_Save_func)
 
-    form_filter.Button_Save.clicked.connect(filter_Save_func)
+    form_filter.save.clicked.connect(save_for_filter)
     form_filter.Button_Cancel.clicked.connect(filter_cancel)
 
 #############################################################################################
@@ -475,7 +542,8 @@ def Filter():
 #Главная часть
 # Подключение к БД
 db_name = 'SYBD.db'
-if not connect_db(db_name):
+db = connect_db(db_name)
+if not db:
     sys.exit(-1)
 else:
     print("connection ok")

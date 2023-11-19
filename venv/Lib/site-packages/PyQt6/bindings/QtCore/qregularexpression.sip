@@ -121,6 +121,9 @@ public:
     {
         DefaultWildcardConversion,
         UnanchoredWildcardConversion,
+%If (Qt_6_6_0 -)
+        NonPathWildcardConversion,
+%End
     };
 
     typedef QFlags<QRegularExpression::WildcardConversionOption> WildcardConversionOptions;

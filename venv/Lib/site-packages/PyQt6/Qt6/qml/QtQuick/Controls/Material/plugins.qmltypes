@@ -588,10 +588,55 @@ Module {
             isConstant: true
         }
         Property {
+            name: "switchIndicatorWidth"
+            type: "int"
+            read: "switchIndicatorWidth"
+            index: 54
+            isReadonly: true
+            isFinal: true
+            isConstant: true
+        }
+        Property {
+            name: "switchIndicatorHeight"
+            type: "int"
+            read: "switchIndicatorHeight"
+            index: 55
+            isReadonly: true
+            isFinal: true
+            isConstant: true
+        }
+        Property {
+            name: "switchNormalHandleHeight"
+            type: "int"
+            read: "switchNormalHandleHeight"
+            index: 56
+            isReadonly: true
+            isFinal: true
+            isConstant: true
+        }
+        Property {
+            name: "switchCheckedHandleHeight"
+            type: "int"
+            read: "switchCheckedHandleHeight"
+            index: 57
+            isReadonly: true
+            isFinal: true
+            isConstant: true
+        }
+        Property {
+            name: "switchLargestHandleHeight"
+            type: "int"
+            read: "switchLargestHandleHeight"
+            index: 58
+            isReadonly: true
+            isFinal: true
+            isConstant: true
+        }
+        Property {
             name: "switchDelegateVerticalPadding"
             type: "int"
             read: "switchDelegateVerticalPadding"
-            index: 54
+            index: 59
             isReadonly: true
             isFinal: true
             isConstant: true
@@ -600,7 +645,7 @@ Module {
             name: "textFieldHeight"
             type: "int"
             read: "textFieldHeight"
-            index: 55
+            index: 60
             isReadonly: true
             isFinal: true
             isConstant: true
@@ -609,7 +654,7 @@ Module {
             name: "textFieldHorizontalPadding"
             type: "int"
             read: "textFieldHorizontalPadding"
-            index: 56
+            index: 61
             isReadonly: true
             isFinal: true
             isConstant: true
@@ -618,7 +663,7 @@ Module {
             name: "textFieldVerticalPadding"
             type: "int"
             read: "textFieldVerticalPadding"
-            index: 57
+            index: 62
             isReadonly: true
             isFinal: true
             isConstant: true
@@ -627,7 +672,7 @@ Module {
             name: "tooltipHeight"
             type: "int"
             read: "tooltipHeight"
-            index: 58
+            index: 63
             isReadonly: true
             isFinal: true
             isConstant: true

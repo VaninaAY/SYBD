@@ -33,10 +33,10 @@ typedef unsigned int uint;
 typedef unsigned long ulong;
 %End
 %If (Qt_6_5_0 -)
-typedef signed char qint8;
+typedef signed char qint8 /PyInt/;
 %End
 %If (Qt_6_5_0 -)
-typedef unsigned char quint8;
+typedef unsigned char quint8 /PyInt/;
 %End
 %If (Qt_6_5_0 -)
 typedef short qint16;

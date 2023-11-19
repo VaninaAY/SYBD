@@ -152,6 +152,11 @@ signals:
 %If (Qt_6_5_0 -)
     void offlineStoragePathChanged();
 %End
+
+public:
+%If (Qt_6_6_0 -)
+    void markCurrentFunctionAsTranslationBinding();
+%End
 };
 
 class QQmlImageProviderBase : QObject

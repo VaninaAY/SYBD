@@ -58,6 +58,7 @@ WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 %Include qaudiosource.sip
 %Include qcamera.sip
 %Include qcameradevice.sip
+%Include qcapturablewindow.sip
 %Include qimagecapture.sip
 %Include qmediacapturesession.sip
 %Include qmediadevices.sip
@@ -71,4 +72,5 @@ WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 %Include qvideoframe.sip
 %Include qvideoframeformat.sip
 %Include qvideosink.sip
+%Include qwindowcapture.sip
 %Include qpymultimedia_qlist.sip

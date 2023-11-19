@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>606</width>
-    <height>669</height>
+    <height>703</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,10 +16,10 @@
   <widget class="QFrame" name="frame">
    <property name="geometry">
     <rect>
-     <x>-50</x>
+     <x>-60</x>
      <y>10</y>
-     <width>651</width>
-     <height>661</height>
+     <width>661</width>
+     <height>721</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -44,14 +44,14 @@
    <widget class="QPushButton" name="Button_Cancel">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>570</y>
-      <width>161</width>
+      <x>260</x>
+      <y>630</y>
+      <width>201</width>
       <height>51</height>
      </rect>
     </property>
     <property name="text">
-     <string>Сброс</string>
+     <string>Выход</string>
     </property>
    </widget>
    <widget class="QLabel" name="label">
@@ -196,17 +196,40 @@
      <string>ВУЗ</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="save">
     <property name="geometry">
      <rect>
-      <x>190</x>
+      <x>260</x>
       <y>570</y>
-      <width>161</width>
+      <width>201</width>
       <height>51</height>
      </rect>
     </property>
     <property name="text">
      <string>Сохранить</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="table_name">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>530</y>
+      <width>311</width>
+      <height>31</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_name">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>500</y>
+      <width>291</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Введите имя таблицы:</string>
     </property>
    </widget>
   </widget>
