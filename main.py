@@ -331,6 +331,22 @@ def on_combobox_sort_changed(index):
 def nothing():
     pass
 
+def change_new_table():
+    name = form.new_table_combobox.currentText()
+    if name == "":
+        return
+    show_table(name, "new_table_NIR", NIR_COLUMN_WIDTH)
+
+def fill():
+    query = QSqlQuery()
+    query.exec("SELECT name FROM sqlite_master WHERE type='table';")
+    table_names = []
+    while query.next():
+        table_names.append(query.value(0))
+    for name in table_names:
+        if name != 'НИР' and name != 'ВУЗы' and name != 'ГРНТИ':
+            new_tables.append(name)
+
 #############################################################################################
 #############################################################################################
 #############################################################################################
@@ -376,7 +392,6 @@ def request_for_filter():
     else:
         request = request.replace("AND", "", 1)
         cursor.execute(f'''SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request}''')
-
     data = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -415,10 +430,12 @@ def save_for_filter():
             request = request.replace("AND", "", 1)
             query_str = f'CREATE TABLE "{new_table}" AS SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request};'
         query.exec(query_str)
-        print(query_str)
+        #print(query_str)
         print("OK")
         form_filter.label_name.setStyleSheet("color: black;")
         form_filter.label_name.setText("")
+        new_tables.append(new_table)
+
     except sqlite3.Error as e:
         print(f"Произошла ошибка: {e}")
 
@@ -439,6 +456,15 @@ def filter_cancel():
     form_row_add.Button_add.clicked.connect(nothing)
     form.comboBox_sort.addItems(['Без сортировки', 'Сортировка по столбцам', 'Сортировка по ключу'])
     form.comboBox_sort.currentIndexChanged.connect(on_combobox_sort_changed)
+    list_unique_names = []
+    unique_names = set(new_tables)
+    for i in unique_names:
+        list_unique_names.append(i)
+    form.new_table_combobox.addItems([None])
+    form.new_table_combobox.addItems(list_unique_names)
+    getattr(form, 'new_table_combobox').setCurrentIndex(0)
+    form.new_table_combobox.currentIndexChanged.connect(change_new_table)
+
     window_filer.close()
 
 def fill_combobox_for_filer(column, widget, request):
@@ -554,6 +580,11 @@ Form, Window = uic.loadUiType("MainForm.ui")
 window = Window()
 form = Form()
 form.setupUi(window)
+new_tables = []
+fill()
+
+form.new_table_combobox.addItems([None])
+form.new_table_combobox.addItems(new_tables)
 
 # Окно для подтвержения удаления
 Form_row_deletion_confirmation, Window_row_deletion_confirmation = uic.loadUiType("row_deletion_confirmation.ui")
@@ -612,6 +643,7 @@ form_row_add.comboBox_type.addItems([None, 'Тематический план', 
 
 form.comboBox_sort.addItems(['Без сортировки','Сортировка по столбцам','Сортировка по ключу'])
 form.comboBox_sort.currentIndexChanged.connect(on_combobox_sort_changed)
+form.new_table_combobox.currentIndexChanged.connect(change_new_table)
 
 window.show()
 app.exec()
