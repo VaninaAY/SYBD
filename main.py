@@ -33,6 +33,43 @@ def show_table(tbl_name, widget_name, column_width):
     for num_column, width in enumerate(column_width):
         getattr(form, widget_name).setColumnWidth(num_column, width)
 
+def table_delate():
+    window_table_delate.show()
+    form_table_delate.textBrowser.setText(f'Вы действительно хотите удалить таблицу: {form.CMB_table_name.currentText()}')
+
+
+def drop_table():
+    db = QSqlDatabase.addDatabase("QSQLITE")
+    db.setDatabaseName(db_name)
+    db.open()
+    query = QSqlQuery()
+    value = form.CMB_table_name.currentText()
+    form.CMB_table_name.setCurrentIndex(0)
+    query.exec(f"DROP TABLE '{value}'")
+    window_table_delate.close()
+    fill_combobox_table_name()
+    form.CMB_table_name.setCurrentIndex(1)
+    db.close()
+def fill_combobox_table_name():
+    query = QSqlQuery()
+    query.exec("SELECT name FROM sqlite_master WHERE type='table'")
+    distinct_values = [None]
+    form.CMB_table_name.clear()
+    while query.next():
+        distinct_values.append(str(query.value(0)))
+    distinct_values.remove('ГРНТИ')
+    distinct_values.remove('НИР')
+    distinct_values.remove('ВУЗы')
+    form.CMB_table_name.clear()
+    form.CMB_table_name.addItems(distinct_values)
+
+
+def processing_combobox_table_name(index):
+        # getattr(form_row_add, widget_disabled).setEditable(False)
+        # getattr(form_row_add, widget_disabled).setCurrentIndex(index)
+        table_name = form.CMB_table_name.itemText(index)
+        print(table_name)
+        show_table(table_name, "tableGroups", NIR_COLUMN_WIDTH)
 # Функции удаления строки
 def deleteRow(Indexes):
     for index in Indexes:
@@ -71,20 +108,29 @@ def deleteSelectedRow():
         form_message_select_row.Button_ok.clicked.connect(window_message_select_row.close)
 
 # Обработка combox для кода ВУЗа и краткого названия, чтобы автоматически подтягивались значения
-def processing_combobox_codvuz_z2(widget_disabled):
+def processing_combobox_codvuz_z2(widget_disabled, widget_chosen):
     def a(index):
-        getattr(form_row_add, widget_disabled).setEditable(False)
-        getattr(form_row_add, widget_disabled).setCurrentIndex(index)
+        value = getattr(form_row_add, widget_chosen).currentText()
+        query = QSqlQuery()
+        if widget_chosen == 'comboBox_z2':
+            query.exec(f'Select "код ВУЗа" from ВУЗы where "ВУЗ кратко" = "{value}"')
+        elif widget_chosen == 'comboBox_codvuz':
+            query.exec(f'Select "ВУЗ кратко" from ВУЗы where "код ВУЗа" = {value}')
+        query.next()
+        result = query.value(0)
+        getattr(form_row_add, widget_disabled).setCurrentText(str(result))
     return a
 
 # Заполняем комбо боксы значениями, полученные из БД
 def fill_combobox(column, table, widget, form):
     query = QSqlQuery()
     query.exec(f'SELECT DISTINCT "{column}" FROM {table}')
-    distinct_values = [None]
+    distinct_values = ['']
     getattr(form, widget).clear()
     while query.next():
         distinct_values.append(str(query.value(0)))
+    if widget != 'comboBox_codvuz':
+        distinct_values.sort()
     getattr(form, widget).addItems(distinct_values)
 
 # Обработка выставок, запрет редактирования, если выставки нет
@@ -234,8 +280,8 @@ def AddRow():
     form_row_add.Button_reset.clicked.disconnect(nothing)
     form_row_add.Button_reset.clicked.connect(reset_form_adding_row)
 
-    form_row_add.comboBox_codvuz.activated.connect(processing_combobox_codvuz_z2('comboBox_z2'))
-    form_row_add.comboBox_z2.activated.connect(processing_combobox_codvuz_z2('comboBox_codvuz'))
+    form_row_add.comboBox_codvuz.activated.connect(processing_combobox_codvuz_z2('comboBox_z2', 'comboBox_codvuz'))
+    form_row_add.comboBox_z2.activated.connect(processing_combobox_codvuz_z2('comboBox_codvuz', 'comboBox_z2'))
     form_row_add.comboBox_exhitype.activated.connect(exhibition_processing)
 
     # когда появится изменение
@@ -331,21 +377,21 @@ def on_combobox_sort_changed(index):
 def nothing():
     pass
 
-def change_new_table():
-    name = form.new_table_combobox.currentText()
-    if name == "":
-        return
-    show_table(name, "new_table_NIR", NIR_COLUMN_WIDTH)
-
-def fill():
-    query = QSqlQuery()
-    query.exec("SELECT name FROM sqlite_master WHERE type='table';")
-    table_names = []
-    while query.next():
-        table_names.append(query.value(0))
-    for name in table_names:
-        if name != 'НИР' and name != 'ВУЗы' and name != 'ГРНТИ':
-            new_tables.append(name)
+# def change_new_table():
+#     name = form.new_table_combobox.currentText()
+#     if name == "":
+#         return
+#     show_table(name, "new_table_NIR", NIR_COLUMN_WIDTH)
+#
+# def fill():
+#     query = QSqlQuery()
+#     query.exec("SELECT name FROM sqlite_master WHERE type='table';")
+#     table_names = []
+#     while query.next():
+#         table_names.append(query.value(0))
+#     for name in table_names:
+#         if name != 'НИР' and name != 'ВУЗы' and name != 'ГРНТИ':
+#             new_tables.append(name)
 
 #############################################################################################
 #############################################################################################
@@ -432,7 +478,7 @@ def save_for_filter():
         query.exec(query_str)
         form_filter.label_name.setStyleSheet("color: black;")
         form_filter.label_name.setText("")
-        new_tables.append(new_table)
+        # new_tables.append(new_table)
 
     except sqlite3.Error as e:
         print(f"Произошла ошибка: {e}")
@@ -458,14 +504,20 @@ def filter_cancel():
     form_row_add.Button_add.clicked.connect(nothing)
     form.comboBox_sort.addItems(['Без сортировки', 'Сортировка по столбцам', 'Сортировка по ключу'])
     form.comboBox_sort.currentIndexChanged.connect(on_combobox_sort_changed)
-    list_unique_names = []
-    unique_names = set(new_tables)
-    for i in unique_names:
-        list_unique_names.append(i)
-    form.new_table_combobox.addItems([None])
-    form.new_table_combobox.addItems(list_unique_names)
-    getattr(form, 'new_table_combobox').setCurrentIndex(0)
-    form.new_table_combobox.currentIndexChanged.connect(change_new_table)
+    # list_unique_names = []
+    # unique_names = set(new_tables)
+    # for i in unique_names:
+    #     list_unique_names.append(i)
+    # form.new_table_combobox.addItems([None])
+    # form.new_table_combobox.addItems(list_unique_names)
+    # getattr(form, 'new_table_combobox').setCurrentIndex(0)
+    # form.new_table_combobox.currentIndexChanged.connect(change_new_table)
+    fill_combobox_table_name()
+    form.CMB_table_name.currentIndexChanged.connect(processing_combobox_table_name)
+    form.btn_detete_table.clicked.connect(table_delate)
+
+    form_table_delate.cansel.clicked.connect(window_table_delate.close)
+    form_table_delate.yes.clicked.connect(drop_table)
 
     window_filer.close()
 
@@ -584,15 +636,15 @@ else:
 
 app = QApplication([])
 # Основное окно
-Form, Window = uic.loadUiType("MainForm.ui")
+Form, Window = uic.loadUiType("MF.ui")
 window = Window()
 form = Form()
 form.setupUi(window)
-new_tables = []
-fill()
+# new_tables = []
+# fill()
 
-form.new_table_combobox.addItems([None])
-form.new_table_combobox.addItems(new_tables)
+# form.new_table_combobox.addItems([None])
+# form.new_table_combobox.addItems(new_tables)
 
 # Окно для подтвержения удаления
 Form_row_deletion_confirmation, Window_row_deletion_confirmation = uic.loadUiType("row_deletion_confirmation.ui")
@@ -617,6 +669,12 @@ Form_message_add_row, Window_message_add_row = uic.loadUiType("message_add_row.u
 window_message_add_row = Window_message_add_row()
 form_message_add_row = Form_message_add_row()
 form_message_add_row.setupUi(window_message_add_row)
+
+# Окно для добавления фильрации
+Form_table_delate, Window_table_delate = uic.loadUiType("table_delete.ui")
+window_table_delate = Window_table_delate()
+form_table_delate = Form_table_delate()
+form_table_delate.setupUi(window_table_delate)
 
 # Окно для добавления фильрации
 Form_filter, Window_filter = uic.loadUiType("filter.ui")
@@ -651,7 +709,13 @@ form_row_add.comboBox_type.addItems([None, 'Тематический план', 
 
 form.comboBox_sort.addItems(['Без сортировки','Сортировка по столбцам','Сортировка по ключу'])
 form.comboBox_sort.currentIndexChanged.connect(on_combobox_sort_changed)
-form.new_table_combobox.currentIndexChanged.connect(change_new_table)
+# form.new_table_combobox.currentIndexChanged.connect(change_new_table)
+fill_combobox_table_name()
+form.CMB_table_name.currentIndexChanged.connect(processing_combobox_table_name)
+form.btn_detete_table.clicked.connect(table_delate)
+
+form_table_delate.cansel.clicked.connect(window_table_delate.close)
+form_table_delate.yes.clicked.connect(drop_table)
 
 window.show()
 app.exec()
