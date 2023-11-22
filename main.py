@@ -377,7 +377,7 @@ def get_filter():
     if VUZ != "":
         request += f'AND НИР."ВУЗ кратко" = "{VUZ}" '
     if grnti != "":
-        request += f'AND "код ГРНТИ" LIKE "{grnti}%" '
+        request += f'AND ("код ГРНТИ" LIKE "{grnti}%" OR "код ГРНТИ" LIKE "%;{grnti}%") '
 
     return request
 
@@ -386,12 +386,12 @@ def request_for_filter():
     cursor = conn.cursor()
 
     request = get_filter()
-
     if request == "":
         cursor.execute("""SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа]""")
     else:
         request = request.replace("AND", "", 1)
         cursor.execute(f'''SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request}''')
+        print(f'''SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request}''')
     data = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -425,13 +425,11 @@ def save_for_filter():
         request = get_filter()
         query_str = ""
         if request == "":
-            query_str = f'CREATE TABLE "{new_table}" AS SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа];'
+            query_str = f'CREATE TABLE "{new_table}" AS SELECT НИР.[код ВУЗа], НИР.[Форма орг-и], НИР.[рег. номер], НИР.[проект], НИР.[код ГРНТИ], НИР.[руководитель], НИР.[должность рук.], НИР.[наличие экспаната], НИР.[выставка], НИР.[название экспаната] FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа];'
         else:
             request = request.replace("AND", "", 1)
-            query_str = f'CREATE TABLE "{new_table}" AS SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request};'
+            query_str = f'CREATE TABLE "{new_table}" AS SELECT НИР.[код ВУЗа], НИР.[Форма орг-и], НИР.[рег. номер], НИР.[проект], НИР.[код ГРНТИ], НИР.[руководитель], НИР.[должность рук.], НИР.[наличие экспаната], НИР.[выставка], НИР.[название экспаната] FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request};'
         query.exec(query_str)
-        #print(query_str)
-        print("OK")
         form_filter.label_name.setStyleSheet("color: black;")
         form_filter.label_name.setText("")
         new_tables.append(new_table)
@@ -443,6 +441,10 @@ def filter_cancel():
     getattr(form_filter, 'federal_district').setCurrentIndex(0)
     getattr(form_filter, 'city').setCurrentIndex(0)
     getattr(form_filter, 'region').setCurrentIndex(0)
+    getattr(form_filter, 'VUZ').setCurrentIndex(0)
+    getattr(form_filter, 'vyst').setCurrentIndex(0)
+    form_filter.table_name.setText("")
+    form_filter.grnti.setText("")
     form.setupUi(window)
     show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
     show_table('ВУЗы', "table_VUZ", VUZ_COLUMN_WIDTH)
@@ -473,7 +475,6 @@ def fill_combobox_for_filer(column, widget, request):
         query.exec(f'SELECT DISTINCT НИР."{column}" FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] {request}')
     else:
         query.exec(f'SELECT DISTINCT "{column}" FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] {request}')
-    print(f'SELECT DISTINCT "{column}" FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] {request}')
     distinct_values = [None]
     getattr(form_filter, widget).clear()
     while query.next():
@@ -521,10 +522,16 @@ def func_for_city():
 def func_for_federal_district():
     filter_Save_func()
     fed = form_filter.federal_district.currentText()
-    req = f'WHERE "фед. округ" = "{fed}"'
-    fill_combobox_for_filer('область', 'region', req)
-    fill_combobox_for_filer('город', 'city', req)
-    fill_combobox_for_filer('ВУЗ кратко', 'VUZ', req)
+    if fed != "":
+        req = f'WHERE "фед. округ" = "{fed}"'
+        fill_combobox_for_filer('область', 'region', req)
+        fill_combobox_for_filer('город', 'city', req)
+        fill_combobox_for_filer('ВУЗ кратко', 'VUZ', req)
+    else:
+        fill_combobox_for_filer('фед. округ', 'federal_district', "")
+        fill_combobox_for_filer('область', 'region', '')
+        fill_combobox_for_filer('город', 'city', '')
+        fill_combobox_for_filer('ВУЗ кратко', 'VUZ', '')
 
 def func_for_VUZ():
     VUZ = form_filter.VUZ.currentText()
@@ -558,6 +565,7 @@ def Filter():
     form_filter.city.currentTextChanged.connect(func_for_city)
     form_filter.vyst.currentTextChanged.connect(filter_Save_func)
 
+    form_filter.button_ok.clicked.connect(filter_Save_func)
     form_filter.save.clicked.connect(save_for_filter)
     form_filter.Button_Cancel.clicked.connect(filter_cancel)
 
