@@ -33,6 +33,44 @@ def show_table(tbl_name, widget_name, column_width):
     for num_column, width in enumerate(column_width):
         getattr(form, widget_name).setColumnWidth(num_column, width)
 
+def table_delate():
+    window_table_delate.show()
+    form_table_delate.textBrowser.setText(f'Вы действительно хотите удалить таблицу: {form.CMB_table_name.currentText()}')
+
+
+def drop_table():
+    db = QSqlDatabase.addDatabase("QSQLITE")
+    db.setDatabaseName(db_name)
+    db.open()
+    query = QSqlQuery()
+    value = form.CMB_table_name.currentText()
+    form.CMB_table_name.setCurrentIndex(0)
+    query.exec(f"DROP TABLE '{value}'")
+    window_table_delate.close()
+    fill_combobox_table_name()
+    form.CMB_table_name.setCurrentIndex(1)
+    db.close()
+def fill_combobox_table_name():
+    query = QSqlQuery()
+    query.exec("SELECT name FROM sqlite_master WHERE type='table'")
+    distinct_values = [None]
+    form.CMB_table_name.clear()
+    while query.next():
+        distinct_values.append(str(query.value(0)))
+    distinct_values.remove('ГРНТИ')
+    distinct_values.remove('НИР')
+    distinct_values.remove('ВУЗы')
+    form.CMB_table_name.clear()
+    form.CMB_table_name.addItems(distinct_values)
+
+
+def processing_combobox_table_name(index):
+        # getattr(form_row_add, widget_disabled).setEditable(False)
+        # getattr(form_row_add, widget_disabled).setCurrentIndex(index)
+        table_name = form.CMB_table_name.itemText(index)
+        print(table_name)
+        show_table(table_name, "tableGroups", NIR_COLUMN_WIDTH)
+
 # Функции удаления строки
 def deleteRow(Indexes):
     for index in Indexes:
@@ -71,20 +109,29 @@ def deleteSelectedRow():
         form_message_select_row.Button_ok.clicked.connect(window_message_select_row.close)
 
 # Обработка combox для кода ВУЗа и краткого названия, чтобы автоматически подтягивались значения
-def processing_combobox_codvuz_z2(widget_disabled):
+def processing_combobox_codvuz_z2(widget_disabled, widget_chosen):
     def a(index):
-        getattr(form_row_add, widget_disabled).setEditable(False)
-        getattr(form_row_add, widget_disabled).setCurrentIndex(index)
+        value = getattr(form_row_add, widget_chosen).currentText()
+        query = QSqlQuery()
+        if widget_chosen == 'comboBox_z2':
+            query.exec(f'Select "код ВУЗа" from ВУЗы where "ВУЗ кратко" = "{value}"')
+        elif widget_chosen == 'comboBox_codvuz':
+            query.exec(f'Select "ВУЗ кратко" from ВУЗы where "код ВУЗа" = {value}')
+        query.next()
+        result = query.value(0)
+        getattr(form_row_add, widget_disabled).setCurrentText(str(result))
     return a
 
 # Заполняем комбо боксы значениями, полученные из БД
 def fill_combobox(column, table, widget, form):
     query = QSqlQuery()
     query.exec(f'SELECT DISTINCT "{column}" FROM {table}')
-    distinct_values = [None]
+    distinct_values = ['']
     getattr(form, widget).clear()
     while query.next():
         distinct_values.append(str(query.value(0)))
+    if widget != 'comboBox_codvuz':
+        distinct_values.sort()
     getattr(form, widget).addItems(distinct_values)
 
 # Обработка выставок, запрет редактирования, если выставки нет
@@ -147,6 +194,8 @@ def row_validation(task):
         cursor.execute(query, params)
         result = cursor.fetchone()[0]
         if not result == 0:
+            cursor.close()
+            conn.close()
             return False, 'Такие уникальны данные (код ВУЗа, Форма организации, регистрационный номер) уже есть. Попробуйте сменить регистрационный номер'
         cursor.close()
         conn.close()
@@ -232,8 +281,8 @@ def AddRow():
     form_row_add.Button_reset.clicked.disconnect(nothing)
     form_row_add.Button_reset.clicked.connect(reset_form_adding_row)
 
-    form_row_add.comboBox_codvuz.activated.connect(processing_combobox_codvuz_z2('comboBox_z2'))
-    form_row_add.comboBox_z2.activated.connect(processing_combobox_codvuz_z2('comboBox_codvuz'))
+    form_row_add.comboBox_codvuz.activated.connect(processing_combobox_codvuz_z2('comboBox_z2', 'comboBox_codvuz'))
+    form_row_add.comboBox_z2.activated.connect(processing_combobox_codvuz_z2('comboBox_codvuz', 'comboBox_z2'))
     form_row_add.comboBox_exhitype.activated.connect(exhibition_processing)
 
     # когда появится изменение
@@ -329,10 +378,226 @@ def on_combobox_sort_changed(index):
 def nothing():
     pass
 
+#############################################################################################
+#############################################################################################
+#############################################################################################
+
+def get_filter():
+    federal_district = form_filter.federal_district.currentText()
+    region = form_filter.region.currentText()
+    city = form_filter.city.currentText()
+    vyst = form_filter.vyst.currentText()
+    VUZ = form_filter.VUZ.currentText()
+    grnti = form_filter.grnti.text()
+
+    request = ""
+
+    if federal_district != "":
+        request += f'AND "фед. округ" = "{federal_district}" '
+    if region != "":
+        request += f'AND "область" = "{region}" '
+    if city != "":
+        request += f'AND "город" = "{city}" '
+    if vyst != "":
+        if vyst == 'Есть':
+            request += f'AND "наличие экспаната" = "Е"'
+        if vyst == 'Нет':
+            request += f'AND "наличие экспаната" = "Н"'
+        if vyst == 'Планируется':
+            request += f'AND "наличие экспаната" = "П"'
+    if VUZ != "":
+        request += f'AND НИР."ВУЗ кратко" = "{VUZ}" '
+    if grnti != "":
+        request += f'AND "код ГРНТИ" LIKE "{grnti}%" '
+
+    return request
+
+def request_for_filter():
+    conn = sqlite3.connect('SYBD.db')
+    cursor = conn.cursor()
+
+    request = get_filter()
+
+    if request == "":
+        cursor.execute("""SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа]""")
+    else:
+        request = request.replace("AND", "", 1)
+        cursor.execute(f'''SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request}''')
+
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return data
+
+def show_filter_table(data):
+    tableWidget = QTableWidget()
+    tableWidget.setRowCount(len(data))
+    tableWidget.setColumnCount(11)
+    for i, user in enumerate(data):
+        for j, value in enumerate(user):
+            item = QTableWidgetItem(str(value))
+            tableWidget.setItem(i, j, item)
+    tableWidget.setHorizontalHeaderLabels(['код ВУЗа', 'ВУЗ кратко', 'НТП', 'рег. номер', 'проект', 'код ГРНТИ', 'руководитель', 'должность рук.', 'налич. экспаната', 'выставка', 'назван экспаната'])
+    window.setCentralWidget(tableWidget)
+    window.show()
+
+def filter_Save_func():
+    data = request_for_filter()
+    show_filter_table(data)
+
+def save_for_filter():
+    try:
+        new_table = form_filter.table_name.text()
+        if new_table == "":
+            form_filter.label_name.setStyleSheet("color: red;")
+            form_filter.label_name.setText("Ошибка! Введите имя таблицы")
+            return
+        query = QSqlQuery(db)
+        request = get_filter()
+        query_str = ""
+        if request == "":
+            query_str = f'CREATE TABLE "{new_table}" AS SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа];'
+        else:
+            request = request.replace("AND", "", 1)
+            query_str = f'CREATE TABLE "{new_table}" AS SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request};'
+        query.exec(query_str)
+        print(query_str)
+        print("OK")
+        form_filter.label_name.setStyleSheet("color: black;")
+        form_filter.label_name.setText("")
+    except sqlite3.Error as e:
+        print(f"Произошла ошибка: {e}")
+
+def filter_cancel():
+    getattr(form_filter, 'federal_district').setCurrentIndex(0)
+    getattr(form_filter, 'city').setCurrentIndex(0)
+    getattr(form_filter, 'region').setCurrentIndex(0)
+    form.setupUi(window)
+    show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
+    show_table('ВУЗы', "table_VUZ", VUZ_COLUMN_WIDTH)
+    show_table('ГРНТИ', "table_GRNTI", GRNTI_COLUMN_WIDTH)
+    window.show()
+    form.Button_delete.clicked.connect(deleteSelectedRow)
+    form.Button_add.clicked.connect(AddRow)
+    form.Button_change.clicked.connect(ChangeRow)
+    form.Button_filter.clicked.connect(Filter)
+    form_row_add.Button_reset.clicked.connect(nothing)
+    form_row_add.Button_add.clicked.connect(nothing)
+    form.comboBox_sort.addItems(['Без сортировки', 'Сортировка по столбцам', 'Сортировка по ключу'])
+    form.comboBox_sort.currentIndexChanged.connect(on_combobox_sort_changed)
+    fill_combobox_table_name()
+    form.CMB_table_name.currentIndexChanged.connect(processing_combobox_table_name)
+    form.btn_detete_table.clicked.connect(table_delate)
+
+    form_table_delate.cansel.clicked.connect(window_table_delate.close)
+    form_table_delate.yes.clicked.connect(drop_table)
+
+    window_filer.close()
+
+def fill_combobox_for_filer(column, widget, request):
+    query = QSqlQuery()
+    if column == 'ВУЗ кратко':
+        query.exec(f'SELECT DISTINCT НИР."{column}" FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] {request}')
+    else:
+        query.exec(f'SELECT DISTINCT "{column}" FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] {request}')
+    print(f'SELECT DISTINCT "{column}" FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] {request}')
+    distinct_values = [None]
+    getattr(form_filter, widget).clear()
+    while query.next():
+        distinct_values.append(str(query.value(0)))
+    getattr(form_filter, widget).addItems(distinct_values)
+
+def func_for_region():
+    filter_Save_func()
+    region = form_filter.region.currentText()
+    if region == "":
+        return
+    conn = sqlite3.connect('SYBD.db')
+    cursor = conn.cursor()
+    cursor.execute(f'''SELECT DISTINCT "фед. округ" FROM ВУЗы WHERE область = "{region}"''')
+    res = cursor.fetchall()
+    str_region = str(res[0])
+    str_region = str_region[2:len(str_region)-3]
+    form_filter.federal_district.setCurrentText(str_region)
+    cursor.close()
+    conn.close()
+    req = f'WHERE "область" = "{region}"'
+    fill_combobox_for_filer('город', 'city', req)
+    fill_combobox_for_filer('ВУЗ кратко', 'VUZ', req)
+    form_filter.region.setCurrentText(region)
+
+def func_for_city():
+    filter_Save_func()
+    city = form_filter.city.currentText()
+    if city == "":
+        return
+    conn = sqlite3.connect('SYBD.db')
+    cursor = conn.cursor()
+    city = form_filter.city.currentText()
+    cursor.execute(f'''SELECT DISTINCT "область" FROM ВУЗы WHERE город = "{city}"''')
+    res = cursor.fetchall()
+    str_region = str(res[0])
+    str_region = str_region[2:len(str_region)-3]
+    form_filter.region.setCurrentText(str_region)
+    form_filter.city.setCurrentText(city)
+    cursor.close()
+    conn.close()
+    req = f'WHERE "город" = "{city}"'
+    fill_combobox_for_filer('ВУЗ кратко', 'VUZ', req)
+
+def func_for_federal_district():
+    filter_Save_func()
+    fed = form_filter.federal_district.currentText()
+    req = f'WHERE "фед. округ" = "{fed}"'
+    fill_combobox_for_filer('область', 'region', req)
+    fill_combobox_for_filer('город', 'city', req)
+    fill_combobox_for_filer('ВУЗ кратко', 'VUZ', req)
+
+def func_for_VUZ():
+    VUZ = form_filter.VUZ.currentText()
+    if VUZ == "":
+        return
+    conn = sqlite3.connect('SYBD.db')
+    cursor = conn.cursor()
+    cursor.execute(f'''SELECT DISTINCT "город" FROM ВУЗы WHERE "ВУЗ кратко" = "{VUZ}"''')
+    res = cursor.fetchall()
+    str_city = str(res[0])
+    str_city = str_city[2:len(str_city)-3]
+    form_filter.city.setCurrentText(str_city)
+    cursor.close()
+    conn.close()
+    filter_Save_func()
+    form_filter.VUZ.setCurrentText(VUZ)
+
+def Filter():
+    window_filer.show()
+
+    fill_combobox_for_filer('фед. округ', 'federal_district', "")
+    fill_combobox_for_filer('область', 'region', '')
+    fill_combobox_for_filer('город', 'city', '')
+    fill_combobox_for_filer('ВУЗ кратко', 'VUZ', '')
+    if form_filter.vyst.count() == 0:
+        form_filter.vyst.addItems([None, 'Есть', 'Нет', 'Планируется'])
+
+    form_filter.federal_district.currentTextChanged.connect(func_for_federal_district)
+    form_filter.VUZ.currentTextChanged.connect(func_for_VUZ)
+    form_filter.region.currentTextChanged.connect(func_for_region)
+    form_filter.city.currentTextChanged.connect(func_for_city)
+    form_filter.vyst.currentTextChanged.connect(filter_Save_func)
+
+    form_filter.save.clicked.connect(save_for_filter)
+    form_filter.Button_Cancel.clicked.connect(filter_cancel)
+
+#############################################################################################
+#############################################################################################
+#############################################################################################
+
 #Главная часть
 # Подключение к БД
 db_name = 'SYBD.db'
-if not connect_db(db_name):
+db = connect_db(db_name)
+if not db:
     sys.exit(-1)
 else:
     print("connection ok")
@@ -368,6 +633,18 @@ window_message_add_row = Window_message_add_row()
 form_message_add_row = Form_message_add_row()
 form_message_add_row.setupUi(window_message_add_row)
 
+# Окно для добавления фильрации
+Form_filter, Window_filter = uic.loadUiType("filter.ui")
+window_filer = Window_filter()
+form_filter = Form_filter()
+form_filter.setupUi(window_filer)
+
+# Окно для добавления фильрации
+Form_table_delate, Window_table_delate = uic.loadUiType("tabte_delate.ui")
+window_table_delate = Window_table_delate()
+form_table_delate = Form_table_delate()
+form_table_delate.setupUi(window_table_delate)
+
 form.table_NIR.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
 # Ширина столбцов для отображения таблицы
@@ -385,6 +662,7 @@ form.Button_change.clicked.connect(ChangeRow)
 form_row_add.Button_reset.clicked.connect(nothing)
 form_row_add.Button_add.clicked.connect(nothing)
 window_row_add.closeEvent = close_event
+form.Button_filter.clicked.connect(Filter)
 
 # Заполнения комбобоксов для формы с добавлением строки
 fill_combobox('код ВУЗа','ВУЗы', 'comboBox_codvuz', form_row_add)
@@ -392,8 +670,16 @@ fill_combobox('ВУЗ кратко', 'ВУЗы', 'comboBox_z2', form_row_add)
 form_row_add.comboBox_exhitype.addItems([None, 'Есть', 'Нет', 'Планируется'])
 form_row_add.comboBox_type.addItems([None, 'Тематический план', 'НТП'])
 
+fill_combobox_table_name()
+form.CMB_table_name.currentIndexChanged.connect(processing_combobox_table_name)
+form.btn_detete_table.clicked.connect(table_delate)
+
+form_table_delate.cansel.clicked.connect(window_table_delate.close)
+form_table_delate.yes.clicked.connect(drop_table)
+
 form.comboBox_sort.addItems(['Без сортировки','Сортировка по столбцам','Сортировка по ключу'])
 form.comboBox_sort.currentIndexChanged.connect(on_combobox_sort_changed)
+
 
 window.show()
 app.exec()
