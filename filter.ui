@@ -87,7 +87,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Обалсть</string>
+     <string>Область</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_3">
@@ -141,7 +141,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Наличин выставки</string>
+     <string>Наличие выставки</string>
     </property>
    </widget>
    <widget class="QWidget" name="layoutWidget">

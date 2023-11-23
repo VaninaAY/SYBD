@@ -236,7 +236,7 @@
         </font>
        </property>
        <property name="text">
-        <string>наличие экспанате *</string>
+        <string>наличие экспоната *</string>
        </property>
       </widget>
      </item>
@@ -266,7 +266,7 @@
         </font>
        </property>
        <property name="text">
-        <string>название экспаната</string>
+        <string>название экспоната</string>
        </property>
       </widget>
      </item>

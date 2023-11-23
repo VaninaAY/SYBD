@@ -21,13 +21,44 @@ def connect_db(db_file):
         return False
     return db
 
+
+def main_functions():
+    show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
+    show_table('ВУЗы', "table_VUZ", VUZ_COLUMN_WIDTH)
+    show_table('ГРНТИ', "table_GRNTI", GRNTI_COLUMN_WIDTH)
+
+    form.table_NIR.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+    form.tableGroups.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+
+    form.Button_delete.clicked.connect(lambda: deleteSelectedRow('table_NIR'))
+    form.btn_detete_row.clicked.connect(lambda: deleteSelectedRow('tableGroups'))
+    form.Button_add.clicked.connect(AddRow)
+    form.Button_change.clicked.connect(ChangeRow)
+    form_row_add.Button_reset.clicked.connect(nothing)
+    form_row_add.Button_add.clicked.connect(nothing)
+    window_row_add.closeEvent = close_event
+    form.Button_filter.clicked.connect(Filter)
+
+    # Заполнения комбобоксов для формы с добавлением строки
+    fill_combobox('код ВУЗа', 'ВУЗы', 'comboBox_codvuz', form_row_add)
+    fill_combobox('ВУЗ кратко', 'ВУЗы', 'comboBox_z2', form_row_add)
+    form_row_add.comboBox_exhitype.addItems([None, 'Есть', 'Нет', 'Планируется'])
+    form_row_add.comboBox_type.addItems([None, 'Тематический план', 'НТП'])
+
+    form.comboBox_sort.addItems(['Без сортировки', 'Сортировка по столбцам', 'Сортировка по ключу'])
+    form.comboBox_sort.currentIndexChanged.connect(on_combobox_sort_changed)
+    # form.new_table_combobox.currentIndexChanged.connect(change_new_table)
+    fill_combobox_table_name()
+    form.CMB_table_name.currentIndexChanged.connect(processing_combobox_table_name)
+    form.btn_detete_table.clicked.connect(table_delate)
+
+    form_table_delate.cansel.clicked.connect(window_table_delate.close)
+    form_table_delate.yes.clicked.connect(drop_table)
+
 # Отображение таблиц
 def show_table(tbl_name, widget_name, column_width):
     table = QSqlTableModel()
     table.setTable(tbl_name)
-    # table.setLimit(-1)
-    # table.setFetchSize(-1)
-    # table.set
     table.select()
     getattr(form, widget_name).setModel(table)
     for num_column, width in enumerate(column_width):
@@ -71,15 +102,15 @@ def processing_combobox_table_name(index):
         print(table_name)
         show_table(table_name, "tableGroups", NIR_COLUMN_WIDTH)
 # Функции удаления строки
-def deleteRow(Indexes):
+def deleteRow(Indexes, table):
     for index in Indexes:
-        form.table_NIR.model().removeRow(index)
-    show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
+        getattr(form, table).model().removeRow(index)
+    show_table('НИР', table, NIR_COLUMN_WIDTH)
     window_row_deletion.close()
 
-def deleteSelectedRow():
-    selected_rows = form.table_NIR.selectionModel().selectedRows()
-    selected_rows_indexes = form.table_NIR.selectedIndexes()
+def deleteSelectedRow(table):
+    selected_rows = getattr(form, table).selectionModel().selectedRows()
+    selected_rows_indexes = getattr(form, table).selectedIndexes()
 
     if selected_rows_indexes:
         window_row_deletion.show()
@@ -90,7 +121,7 @@ def deleteSelectedRow():
             if i % 11 == 0 and i != 0:
                 data.append(row)
                 row = []
-            row.append(form.table_NIR.model().data(index))
+            row.append(getattr(form, table).model().data(index))
         data.append(row)
         print(data)
 
@@ -100,7 +131,7 @@ def deleteSelectedRow():
 
         form_row_deletion.textBrowser_del.setText(text)
         selected_rows_indexes = [index.row() for index in selected_rows]
-        form_row_deletion.Button_delete.clicked.connect(lambda: deleteRow(selected_rows_indexes))
+        form_row_deletion.Button_delete.clicked.connect(lambda: deleteRow(selected_rows_indexes, table))
         form_row_deletion.Button_cancel.clicked.connect(window_row_deletion.close)
 
     else:
@@ -492,32 +523,7 @@ def filter_cancel():
     form_filter.table_name.setText("")
     form_filter.grnti.setText("")
     form.setupUi(window)
-    show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
-    show_table('ВУЗы', "table_VUZ", VUZ_COLUMN_WIDTH)
-    show_table('ГРНТИ', "table_GRNTI", GRNTI_COLUMN_WIDTH)
-    window.show()
-    form.Button_delete.clicked.connect(deleteSelectedRow)
-    form.Button_add.clicked.connect(AddRow)
-    form.Button_change.clicked.connect(ChangeRow)
-    form.Button_filter.clicked.connect(Filter)
-    form_row_add.Button_reset.clicked.connect(nothing)
-    form_row_add.Button_add.clicked.connect(nothing)
-    form.comboBox_sort.addItems(['Без сортировки', 'Сортировка по столбцам', 'Сортировка по ключу'])
-    form.comboBox_sort.currentIndexChanged.connect(on_combobox_sort_changed)
-    # list_unique_names = []
-    # unique_names = set(new_tables)
-    # for i in unique_names:
-    #     list_unique_names.append(i)
-    # form.new_table_combobox.addItems([None])
-    # form.new_table_combobox.addItems(list_unique_names)
-    # getattr(form, 'new_table_combobox').setCurrentIndex(0)
-    # form.new_table_combobox.currentIndexChanged.connect(change_new_table)
-    fill_combobox_table_name()
-    form.CMB_table_name.currentIndexChanged.connect(processing_combobox_table_name)
-    form.btn_detete_table.clicked.connect(table_delate)
-
-    form_table_delate.cansel.clicked.connect(window_table_delate.close)
-    form_table_delate.yes.clicked.connect(drop_table)
+    main_functions()
 
     window_filer.close()
 
@@ -682,40 +688,17 @@ window_filer = Window_filter()
 form_filter = Form_filter()
 form_filter.setupUi(window_filer)
 
-form.table_NIR.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
 # Ширина столбцов для отображения таблицы
 NIR_COLUMN_WIDTH = (70, 100, 40, 70, 300, 120, 120, 140, 100, 300, 300)
 VUZ_COLUMN_WIDTH = (70, 200, 300, 100, 140, 150, 140, 100, 200, 70, 70)
 GRNTI_COLUMN_WIDTH = (50, 450)
 
-show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
-show_table('ВУЗы', "table_VUZ", VUZ_COLUMN_WIDTH)
-show_table('ГРНТИ', "table_GRNTI", GRNTI_COLUMN_WIDTH)
 
-form.Button_delete.clicked.connect(deleteSelectedRow)
-form.Button_add.clicked.connect(AddRow)
-form.Button_change.clicked.connect(ChangeRow)
-form_row_add.Button_reset.clicked.connect(nothing)
-form_row_add.Button_add.clicked.connect(nothing)
-window_row_add.closeEvent = close_event
-form.Button_filter.clicked.connect(Filter)
 
-# Заполнения комбобоксов для формы с добавлением строки
-fill_combobox('код ВУЗа','ВУЗы', 'comboBox_codvuz', form_row_add)
-fill_combobox('ВУЗ кратко', 'ВУЗы', 'comboBox_z2', form_row_add)
-form_row_add.comboBox_exhitype.addItems([None, 'Есть', 'Нет', 'Планируется'])
-form_row_add.comboBox_type.addItems([None, 'Тематический план', 'НТП'])
 
-form.comboBox_sort.addItems(['Без сортировки','Сортировка по столбцам','Сортировка по ключу'])
-form.comboBox_sort.currentIndexChanged.connect(on_combobox_sort_changed)
-# form.new_table_combobox.currentIndexChanged.connect(change_new_table)
-fill_combobox_table_name()
-form.CMB_table_name.currentIndexChanged.connect(processing_combobox_table_name)
-form.btn_detete_table.clicked.connect(table_delate)
 
-form_table_delate.cansel.clicked.connect(window_table_delate.close)
-form_table_delate.yes.clicked.connect(drop_table)
+main_functions()
 
 window.show()
 app.exec()

@@ -28,7 +28,7 @@
         <item>
          <widget class="QTabWidget" name="table_tab">
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tab_3">
            <attribute name="title">
@@ -120,6 +120,13 @@
                </spacer>
               </item>
               <item>
+               <widget class="QPushButton" name="btn_detete_row">
+                <property name="text">
+                 <string>Удалить сторку</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QPushButton" name="btn_detete_table">
                 <property name="text">
                  <string>Удалить таблицу</string>
@@ -164,11 +171,6 @@
          </widget>
         </item>
        </layout>
-      </widget>
-      <widget class="QWidget" name="tab_2">
-       <attribute name="title">
-        <string>Сервис</string>
-       </attribute>
       </widget>
      </widget>
     </item>
