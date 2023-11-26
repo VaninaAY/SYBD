@@ -29,7 +29,7 @@ def saveSelectedRow():
     if selected_rows_indexes:
         data = []
         row = []
-        for i, index in enumerate(cd):
+        for i, index in enumerate(selected_rows_indexes):
             if i % 11 == 0 and i != 0:
                 data.append(row)
                 row = []
