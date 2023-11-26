@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>606</width>
-    <height>703</height>
+    <width>601</width>
+    <height>786</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <x>-60</x>
      <y>10</y>
      <width>661</width>
-     <height>721</height>
+     <height>771</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -45,7 +45,7 @@
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>630</y>
+      <y>690</y>
       <width>201</width>
       <height>51</height>
      </rect>
@@ -200,7 +200,7 @@
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>570</y>
+      <y>630</y>
       <width>201</width>
       <height>51</height>
      </rect>
@@ -230,6 +230,29 @@
     </property>
     <property name="text">
      <string>Введите имя таблицы:</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="union_button">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>570</y>
+      <width>171</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Объединить</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="union_new_table">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>570</y>
+      <width>131</width>
+      <height>22</height>
+     </rect>
     </property>
    </widget>
   </widget>

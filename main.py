@@ -8,9 +8,51 @@ import sqlite3
 from PyQt6.QtWidgets import *
 from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtCore import *
+import pandas as pd
+import openpyxl
 
 # from PyQt6.QtCore import QItemSelectionModel, QItemSelection
 from PyQt6.QtCore import QModelIndex, QItemSelection, QItemSelectionModel
+
+def saveSelectedRow():
+    name = form.cards_name.text()
+    if name == "":
+        form.check_card_name.setStyleSheet("color: red;")
+        form.check_card_name.setText("Ошибка! Введите имя файла")
+        return
+
+    form.check_card_name.setStyleSheet("color: black;")
+    form.check_card_name.setText("")
+
+    selected_rows_indexes = getattr(form, 'table_NIR').selectedIndexes()
+
+    if selected_rows_indexes:
+        data = []
+        row = []
+        for i, index in enumerate(cd):
+            if i % 11 == 0 and i != 0:
+                data.append(row)
+                row = []
+            row.append(getattr(form, 'table_NIR').model().data(index))
+        data.append(row)
+        print(data)
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        for row in data:
+            sheet.append(row)
+        workbook.save(f'./cards/{name}.xlsx') ##Исправить имя
+
+def save_table_to_excel():
+    table_name = form.CMB_table_name.currentText()
+    excel_path = f'./tables/{table_name}.xlsx'
+    if table_name == "":
+        return
+
+    conn = sqlite3.connect('SYBD.db')
+    query = f"SELECT * FROM {table_name}"
+    df = pd.read_sql_query(query, conn)
+    df.to_excel(excel_path, index=False)
+    conn.close()
 
 # Подклюючение к базе данных и проверка ее наличия
 def connect_db(db_file):
@@ -22,6 +64,7 @@ def connect_db(db_file):
     return db
 
 
+
 def main_functions():
     show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
     show_table('ВУЗы', "table_VUZ", VUZ_COLUMN_WIDTH)
@@ -30,6 +73,7 @@ def main_functions():
     form.table_NIR.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
     form.tableGroups.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
+    form.save_row.clicked.connect(saveSelectedRow)
     form.Button_delete.clicked.connect(lambda: deleteSelectedRow('table_NIR'))
     form.btn_detete_row.clicked.connect(lambda: deleteSelectedRow('tableGroups'))
     form.Button_add.clicked.connect(AddRow)
@@ -38,6 +82,7 @@ def main_functions():
     form_row_add.Button_add.clicked.connect(nothing)
     window_row_add.closeEvent = close_event
     form.Button_filter.clicked.connect(Filter)
+    form.new_filter_button.clicked.connect(Filter_for_table)
 
     # Заполнения комбобоксов для формы с добавлением строки
     fill_combobox('код ВУЗа', 'ВУЗы', 'comboBox_codvuz', form_row_add)
@@ -51,6 +96,7 @@ def main_functions():
     fill_combobox_table_name()
     form.CMB_table_name.currentIndexChanged.connect(processing_combobox_table_name)
     form.btn_detete_table.clicked.connect(table_delate)
+    form.save_filter_table.clicked.connect(save_table_to_excel)
 
     form_table_delate.cansel.clicked.connect(window_table_delate.close)
     form_table_delate.yes.clicked.connect(drop_table)
@@ -79,8 +125,11 @@ def drop_table():
     query.exec(f"DROP TABLE '{value}'")
     window_table_delate.close()
     fill_combobox_table_name()
-    form.CMB_table_name.setCurrentIndex(1)
+    fill_combobox_table_name_in_filter()
+    form.CMB_table_name.setCurrentIndex(0)
+    form_filter.union_new_table.setCurrentIndex(0)
     db.close()
+
 def fill_combobox_table_name():
     query = QSqlQuery()
     query.exec("SELECT name FROM sqlite_master WHERE type='table'")
@@ -94,12 +143,23 @@ def fill_combobox_table_name():
     form.CMB_table_name.clear()
     form.CMB_table_name.addItems(distinct_values)
 
+def fill_combobox_table_name_in_filter():
+    query = QSqlQuery()
+    query.exec("SELECT name FROM sqlite_master WHERE type='table'")
+    distinct_values = [None]
+    form_filter.union_new_table.clear()
+    while query.next():
+        distinct_values.append(str(query.value(0)))
+    distinct_values.remove('ГРНТИ')
+    distinct_values.remove('НИР')
+    distinct_values.remove('ВУЗы')
+    form_filter.union_new_table.clear()
+    form_filter.union_new_table.addItems(distinct_values)
 
 def processing_combobox_table_name(index):
         # getattr(form_row_add, widget_disabled).setEditable(False)
         # getattr(form_row_add, widget_disabled).setCurrentIndex(index)
         table_name = form.CMB_table_name.itemText(index)
-        print(table_name)
         show_table(table_name, "tableGroups", NIR_COLUMN_WIDTH)
 # Функции удаления строки
 def deleteRow(Indexes, table):
@@ -458,17 +518,16 @@ def get_filter():
 
     return request
 
-def request_for_filter():
+def request_for_filter(table_name):
     conn = sqlite3.connect('SYBD.db')
     cursor = conn.cursor()
 
     request = get_filter()
     if request == "":
-        cursor.execute("""SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа]""")
+        cursor.execute(f"""SELECT * FROM {table_name} INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = {table_name}.[код ВУЗа]""")
     else:
         request = request.replace("AND", "", 1)
-        cursor.execute(f'''SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request}''')
-        print(f'''SELECT * FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request}''')
+        cursor.execute(f'''SELECT * FROM {table_name} INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = {table_name}.[код ВУЗа] WHERE {request}''')
     data = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -488,10 +547,11 @@ def show_filter_table(data):
     window.show()
 
 def filter_Save_func():
-    data = request_for_filter()
+    data = request_for_filter("НИР")
     show_filter_table(data)
 
-def save_for_filter():
+def save_for_filter(table_name):
+    table_name = "НИР"
     try:
         new_table = form_filter.table_name.text()
         if new_table == "":
@@ -499,20 +559,35 @@ def save_for_filter():
             form_filter.label_name.setText("Ошибка! Введите имя таблицы")
             return
         query = QSqlQuery(db)
+        check_table_query = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{new_table}'"
+        if query.exec(check_table_query):
+            if query.first():
+                db.close()
+                conn = sqlite3.connect('SYBD.db')
+                cursor = conn.cursor()
+                cursor.execute(f"DROP TABLE '{new_table}'")
+                cursor.close()
+                conn.close()
+                db.open()
         request = get_filter()
         query_str = ""
         if request == "":
-            query_str = f'CREATE TABLE "{new_table}" AS SELECT НИР.[код ВУЗа], НИР.[Форма орг-и], НИР.[рег. номер], НИР.[проект], НИР.[код ГРНТИ], НИР.[руководитель], НИР.[должность рук.], НИР.[наличие экспаната], НИР.[выставка], НИР.[название экспаната] FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа];'
+            query_str = f'CREATE TABLE "{new_table}" AS SELECT {table_name}.[код ВУЗа], {table_name}.[ВУЗ кратко], {table_name}.[Форма орг-и], {table_name}.[рег. номер], {table_name}.[проект], {table_name}.[код ГРНТИ], {table_name}.[руководитель], {table_name}.[должность рук.], {table_name}.[наличие экспаната], {table_name}.[выставка], {table_name}.[название экспаната] FROM {table_name} INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = {table_name}.[код ВУЗа];'
         else:
             request = request.replace("AND", "", 1)
-            query_str = f'CREATE TABLE "{new_table}" AS SELECT НИР.[код ВУЗа], НИР.[Форма орг-и], НИР.[рег. номер], НИР.[проект], НИР.[код ГРНТИ], НИР.[руководитель], НИР.[должность рук.], НИР.[наличие экспаната], НИР.[выставка], НИР.[название экспаната] FROM НИР INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = НИР.[код ВУЗа] WHERE {request};'
+            query_str = f'CREATE TABLE "{new_table}" AS SELECT {table_name}.[код ВУЗа], {table_name}.[ВУЗ кратко], {table_name}.[Форма орг-и], {table_name}.[рег. номер], {table_name}.[проект], {table_name}.[код ГРНТИ], {table_name}.[руководитель], {table_name}.[должность рук.], {table_name}.[наличие экспаната], {table_name}.[выставка], {table_name}.[название экспаната] FROM {table_name} INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = {table_name}.[код ВУЗа] WHERE {request};'
         query.exec(query_str)
         form_filter.label_name.setStyleSheet("color: black;")
         form_filter.label_name.setText("")
         # new_tables.append(new_table)
-
     except sqlite3.Error as e:
         print(f"Произошла ошибка: {e}")
+
+def filter_cancel_for_main():
+    form_filter.button_ok.clicked.disconnect(filter_Save_func)
+    form_filter.save.clicked.disconnect(save_for_filter_tmp)
+    form_filter.Button_Cancel.clicked.disconnect(filter_cancel_for_main)
+    filter_cancel()
 
 def filter_cancel():
     getattr(form_filter, 'federal_district').setCurrentIndex(0)
@@ -524,7 +599,6 @@ def filter_cancel():
     form_filter.grnti.setText("")
     form.setupUi(window)
     main_functions()
-
     window_filer.close()
 
 def fill_combobox_for_filer(column, widget, request):
@@ -607,9 +681,119 @@ def func_for_VUZ():
     filter_Save_func()
     form_filter.VUZ.setCurrentText(VUZ)
 
+def save_for_filter_tmp():
+    save_for_filter("НИР")
+    fill_combobox_table_name_in_filter()
+
+def union_tables():
+    new_table = form_filter.table_name.text()
+    if new_table == "":
+        form_filter.label_name.setStyleSheet("color: red;")
+        form_filter.label_name.setText("Ошибка! Введите имя таблицы")
+        return
+    old_table_name = form_filter.union_new_table.currentText()
+    if old_table_name == "":
+        form_filter.label_name.setStyleSheet("color: red;")
+        form_filter.label_name.setText("Ошибка! Выберите таблицу")
+        return
+    form_filter.label_name.setStyleSheet("color: black;")
+    form_filter.label_name.setText("")
+
+    flag = 0
+    if new_table == old_table_name:
+        new_table = new_table + "1"
+        flag = 1
+
+    check_table_query = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{new_table}'"
+    query = QSqlQuery(db)
+    if query.exec(check_table_query):
+        if query.first():
+            db.close()
+            conn = sqlite3.connect('SYBD.db')
+            cursor = conn.cursor()
+            cursor.execute(f"DROP TABLE '{new_table}'")
+            cursor.close()
+            conn.close()
+            db.open()
+
+    table_name = "НИР"
+    request = get_filter()
+    query_str = ""
+    if request == "":
+        query_str = f'CREATE TABLE "{new_table}" AS SELECT {table_name}.[код ВУЗа], {table_name}.[ВУЗ кратко], {table_name}.[Форма орг-и], {table_name}.[рег. номер], {table_name}.[проект], {table_name}.[код ГРНТИ], {table_name}.[руководитель], {table_name}.[должность рук.], {table_name}.[наличие экспаната], {table_name}.[выставка], {table_name}.[название экспаната] FROM {table_name} INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = {table_name}.[код ВУЗа];'
+        query.exec(query_str)
+    else:
+        tmp_table_name = "tmp_" + new_table
+        request = request.replace("AND", "", 1)
+        query_str = f'CREATE TABLE "{tmp_table_name}" AS SELECT {table_name}.[код ВУЗа], {table_name}.[ВУЗ кратко], {table_name}.[Форма орг-и], {table_name}.[рег. номер], {table_name}.[проект], {table_name}.[код ГРНТИ], {table_name}.[руководитель], {table_name}.[должность рук.], {table_name}.[наличие экспаната], {table_name}.[выставка], {table_name}.[название экспаната] FROM {table_name} INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = {table_name}.[код ВУЗа] WHERE {request};'
+        query.exec(query_str)
+        query.exec(f'CREATE TABLE "{new_table}" AS SELECT * FROM "{tmp_table_name}" UNION SELECT * FROM "{old_table_name}"')
+        db.close()
+        conn = sqlite3.connect('SYBD.db')
+        cursor = conn.cursor()
+        cursor.execute(f"DROP TABLE '{tmp_table_name}'")
+        cursor.close()
+        conn.close()
+        db.open()
+
+    if flag == 1:
+        dr = new_table
+        new_table = new_table[0:len(new_table)-1]
+        db.close()
+        conn = sqlite3.connect('SYBD.db')
+        cursor = conn.cursor()
+        cursor.execute(f"DROP TABLE '{new_table}'")
+        cursor.execute(f'CREATE TABLE "{new_table}" AS SELECT * FROM {dr}')
+        cursor.execute(f"DROP TABLE '{dr}'")
+        cursor.close()
+        conn.close()
+        db.open()
+
 def Filter():
     window_filer.show()
+    fill_combobox_for_filer('фед. округ', 'federal_district', "")
+    fill_combobox_for_filer('область', 'region', '')
+    fill_combobox_for_filer('город', 'city', '')
+    fill_combobox_for_filer('ВУЗ кратко', 'VUZ', '')
+    if form_filter.vyst.count() == 0:
+        form_filter.vyst.addItems([None, 'Есть', 'Нет', 'Планируется'])
+    fill_combobox_table_name_in_filter()
 
+    form_filter.federal_district.currentTextChanged.connect(func_for_federal_district)
+    form_filter.VUZ.currentTextChanged.connect(func_for_VUZ)
+    form_filter.region.currentTextChanged.connect(func_for_region)
+    form_filter.city.currentTextChanged.connect(func_for_city)
+    form_filter.vyst.currentTextChanged.connect(filter_Save_func)
+
+    form_filter.union_button.clicked.connect(union_tables)
+    form_filter.button_ok.clicked.connect(filter_Save_func)
+    form_filter.save.clicked.connect(save_for_filter_tmp)
+    form_filter.Button_Cancel.clicked.connect(filter_cancel_for_main)
+
+#############################################################################################
+#############################################################################################
+#############################################################################################
+
+current_table_name = ""
+
+def filter_cancel_for_table():
+    form_filter.button_ok.clicked.disconnect(filter_Save_func)
+    form_filter.save.clicked.disconnect(save_for_filter_table)
+    form_filter.Button_Cancel.clicked.disconnect(filter_cancel_for_table)
+    filter_cancel()
+
+def save_for_filter_table():
+    save_for_filter(current_table_name)
+    fill_combobox_table_name_in_filter()
+
+def Filter_for_table():
+    global current_table_name
+    current_table_name = form.CMB_table_name.currentText()
+    if current_table_name == "":
+        return
+    form_filter.table_name.setText(current_table_name)
+    window_filer.show()
+    fill_combobox_table_name_in_filter()
     fill_combobox_for_filer('фед. округ', 'federal_district', "")
     fill_combobox_for_filer('область', 'region', '')
     fill_combobox_for_filer('город', 'city', '')
@@ -623,9 +807,54 @@ def Filter():
     form_filter.city.currentTextChanged.connect(func_for_city)
     form_filter.vyst.currentTextChanged.connect(filter_Save_func)
 
+    fill_filter_table()
+    form_filter.union_button.clicked.connect(union_tables)
     form_filter.button_ok.clicked.connect(filter_Save_func)
-    form_filter.save.clicked.connect(save_for_filter)
-    form_filter.Button_Cancel.clicked.connect(filter_cancel)
+    form_filter.save.clicked.connect(save_for_filter_table)
+    form_filter.Button_Cancel.clicked.connect(filter_cancel_for_table)
+
+def fill_filter_table():
+    table_name = current_table_name
+    conn = sqlite3.connect('SYBD.db')
+    cursor = conn.cursor()
+    cursor.execute(f'''SELECT distinct "ВУЗ кратко" FROM "{table_name}"''')
+    res = cursor.fetchall()
+    if len(res) == 1:
+        VUZ = str(res[0])
+        VUZ = VUZ[2:len(VUZ)-3]
+        form_filter.VUZ.setCurrentText(VUZ)
+        cursor.close()
+        conn.close()
+        return
+    cursor.execute(f'''SELECT distinct ВУЗы."город" FROM "{table_name}" INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = {table_name}.[код ВУЗа]''')
+    res = cursor.fetchall()
+    if len(res) == 1:
+        city = str(res[0])
+        city = city[2:len(city)-3]
+        form_filter.city.setCurrentText(city)
+        cursor.close()
+        conn.close()
+        return
+    cursor.execute(f'''SELECT distinct ВУЗы."область" FROM "{table_name}" INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = {table_name}.[код ВУЗа]''')
+    res = cursor.fetchall()
+    if len(res) == 1:
+        region = str(res[0])
+        region = region[2:len(region)-3]
+        form_filter.region.setCurrentText(region)
+        cursor.close()
+        conn.close()
+        return
+    cursor.execute(f'''SELECT distinct ВУЗы."фед. округ" FROM "{table_name}" INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = {table_name}.[код ВУЗа]''')
+    res = cursor.fetchall()
+    if len(res) == 1:
+        federal_district = str(res[0])
+        federal_district = federal_district[2:len(federal_district)-3]
+        form_filter.federal_district.setCurrentText(federal_district)
+        cursor.close()
+        conn.close()
+        return
+    cursor.close()
+    conn.close()
 
 #############################################################################################
 #############################################################################################
@@ -693,9 +922,6 @@ form_filter.setupUi(window_filer)
 NIR_COLUMN_WIDTH = (70, 100, 40, 70, 300, 120, 120, 140, 100, 300, 300)
 VUZ_COLUMN_WIDTH = (70, 200, 300, 100, 140, 150, 140, 100, 200, 70, 70)
 GRNTI_COLUMN_WIDTH = (50, 450)
-
-
-
 
 
 main_functions()

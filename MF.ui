@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>713</width>
-    <height>589</height>
+    <width>798</width>
+    <height>619</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,9 +26,9 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
-         <widget class="QTabWidget" name="table_tab">
+         <widget class="QTabWidget" name="card_name">
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab_3">
            <attribute name="title">
@@ -44,6 +44,20 @@
             </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <item>
+               <widget class="QPushButton" name="save_row">
+                <property name="text">
+                 <string>Сохранить строку в файл</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="cards_name">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
               <item>
                <spacer name="horizontalSpacer">
                 <property name="orientation">
@@ -94,6 +108,13 @@
               </item>
              </layout>
             </item>
+            <item>
+             <widget class="QLabel" name="check_card_name">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
            </layout>
           </widget>
           <widget class="QWidget" name="tab_6">
@@ -105,6 +126,20 @@
              <layout class="QHBoxLayout" name="horizontalLayout_4">
               <item>
                <widget class="QComboBox" name="CMB_table_name"/>
+              </item>
+              <item>
+               <widget class="QPushButton" name="new_filter_button">
+                <property name="text">
+                 <string>Фильтрация</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="save_filter_table">
+                <property name="text">
+                 <string>Сохранить таблицу</string>
+                </property>
+               </widget>
               </item>
               <item>
                <spacer name="horizontalSpacer_2">
