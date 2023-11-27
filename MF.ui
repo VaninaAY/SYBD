@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>798</width>
+    <width>847</width>
     <height>619</height>
    </rect>
   </property>
@@ -28,7 +28,7 @@
         <item>
          <widget class="QTabWidget" name="card_name">
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tab_3">
            <attribute name="title">
@@ -128,6 +128,9 @@
                <widget class="QComboBox" name="CMB_table_name"/>
               </item>
               <item>
+               <widget class="QComboBox" name="CMB_sort_table"/>
+              </item>
+              <item>
                <widget class="QPushButton" name="new_filter_button">
                 <property name="text">
                  <string>Фильтрация</string>
@@ -135,29 +138,16 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="save_filter_table">
+               <widget class="QPushButton" name="btn_detete_row">
                 <property name="text">
-                 <string>Сохранить таблицу</string>
+                 <string>Удалить сторку</string>
                 </property>
                </widget>
               </item>
               <item>
-               <spacer name="horizontalSpacer_2">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>188</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QPushButton" name="btn_detete_row">
+               <widget class="QPushButton" name="save_filter_table">
                 <property name="text">
-                 <string>Удалить сторку</string>
+                 <string>Сохранить таблицу</string>
                 </property>
                </widget>
               </item>

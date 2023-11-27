@@ -91,7 +91,9 @@ def main_functions():
     form_row_add.comboBox_type.addItems([None, 'Тематический план', 'НТП'])
 
     form.comboBox_sort.addItems(['Без сортировки', 'Сортировка по столбцам', 'Сортировка по ключу'])
-    form.comboBox_sort.currentIndexChanged.connect(on_combobox_sort_changed)
+    form.comboBox_sort.currentIndexChanged.connect(lambda: on_combobox_sort_changed(1))
+    form.CMB_sort_table.addItems(['Без сортировки', 'Сортировка по столбцам', 'Сортировка по ключу'])
+    form.CMB_sort_table.currentIndexChanged.connect(lambda: on_combobox_sort_changed(0))
     # form.new_table_combobox.currentIndexChanged.connect(change_new_table)
     fill_combobox_table_name()
     form.CMB_table_name.currentIndexChanged.connect(processing_combobox_table_name)
@@ -449,21 +451,28 @@ def ChangeRow():
         window_message_select_row.show()
         form_message_select_row.Button_ok.clicked.connect(window_message_select_row.close)
 
-def on_combobox_sort_changed(index):
-    selected_value = form.comboBox_sort.currentText()
-    if selected_value == 'Без сортировки':
-        form.table_NIR.setSortingEnabled(False)
-        show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
-    elif selected_value == 'Сортировка по столбцам':
-        show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
-        form.table_NIR.setSortingEnabled(True)
-    elif selected_value == 'Сортировка по ключу':
-        show_table('НИР', "table_NIR", NIR_COLUMN_WIDTH)
+def on_combobox_sort_changed(a):
+    if a == 1:
+        selected_sort = form.comboBox_sort.currentText()
+        selected_table = 'НИР'
+        widget = 'table_NIR'
+    else:
+        selected_sort = form.CMB_sort_table.currentText()
+        selected_table = form.CMB_table_name.currentText()
+        widget = 'tableGroups'
+    if selected_sort == 'Без сортировки':
+        getattr(form, widget).setSortingEnabled(False)
+        show_table(selected_table, widget, NIR_COLUMN_WIDTH)
+    elif selected_sort == 'Сортировка по столбцам':
+        show_table(selected_table, widget, NIR_COLUMN_WIDTH)
+        getattr(form, widget).setSortingEnabled(True)
+    elif selected_sort == 'Сортировка по ключу':
+        show_table(selected_table, widget, NIR_COLUMN_WIDTH)
         query = QSqlQuery()
-        query.exec('SELECT * FROM НИР ORDER BY "код ВУЗа" ASC, "Форма орг-и" ASC, "рег. номер" ASC')
+        query.exec(f'SELECT * FROM {selected_table} ORDER BY "код ВУЗа" ASC, "Форма орг-и" ASC, "рег. номер" ASC')
         model = QSqlTableModel()
         model.setQuery(query)
-        form.table_NIR.setModel(model)
+        getattr(form, widget).setModel(model)
         
 def nothing():
     pass
