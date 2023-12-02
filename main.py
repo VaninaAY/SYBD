@@ -10,6 +10,7 @@ from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtCore import *
 import pandas as pd
 import openpyxl
+import os
 
 # from PyQt6.QtCore import QItemSelectionModel, QItemSelection
 from PyQt6.QtCore import QModelIndex, QItemSelection, QItemSelectionModel
@@ -35,12 +36,28 @@ def saveSelectedRow():
                 row = []
             row.append(getattr(form, 'table_NIR').model().data(index))
         data.append(row)
-        print(data)
-        workbook = openpyxl.Workbook()
-        sheet = workbook.active
+
+        file_path = f'./cards/{name}.xlsx'
+
+        # Проверка, существует ли файл
+        if os.path.exists(file_path):
+            # Открытие существующего файла
+            workbook = openpyxl.load_workbook(file_path)
+            sheet = workbook.active
+        else:
+            # Создание нового файла
+            workbook = openpyxl.Workbook()
+            sheet = workbook.active
+
+        # Добавление строк в лист
         for row in data:
             sheet.append(row)
-        workbook.save(f'./cards/{name}.xlsx') ##Исправить имя
+
+        # Сохранение файла
+        workbook.save(file_path)
+        form.check_card_name.setStyleSheet("color: black;")
+        form.check_card_name.setText("Сохранено")
+        QTimer.singleShot(3000, lambda: form.check_card_name.setText(""))
 
 def save_table_to_excel():
     table_name = form.CMB_table_name.currentText()
@@ -589,6 +606,8 @@ def save_for_filter(table_name):
         form_filter.label_name.setStyleSheet("color: black;")
         form_filter.label_name.setText("")
         # new_tables.append(new_table)
+        form_filter.label_name.setStyleSheet("color: black;")
+        form_filter.label_name.setText("Таблица сохранена")
     except sqlite3.Error as e:
         print(f"Произошла ошибка: {e}")
 
@@ -606,6 +625,7 @@ def filter_cancel():
     getattr(form_filter, 'vyst').setCurrentIndex(0)
     form_filter.table_name.setText("")
     form_filter.grnti.setText("")
+    form_filter.label_name.setText("")
     form.setupUi(window)
     main_functions()
     window_filer.close()
@@ -757,6 +777,7 @@ def union_tables():
         cursor.close()
         conn.close()
         db.open()
+    form_filter.label_name.setText("Таблицы объединены")
 
 def Filter():
     window_filer.show()
@@ -789,6 +810,10 @@ def filter_cancel_for_table():
     form_filter.button_ok.clicked.disconnect(filter_Save_func)
     form_filter.save.clicked.disconnect(save_for_filter_table)
     form_filter.Button_Cancel.clicked.disconnect(filter_cancel_for_table)
+    form_filter.federal_district.setEnabled(True)
+    form_filter.region.setEnabled(True)
+    form_filter.city.setEnabled(True)
+    form_filter.VUZ.setEnabled(True)
     filter_cancel()
 
 def save_for_filter_table():
@@ -834,6 +859,10 @@ def fill_filter_table():
         form_filter.VUZ.setCurrentText(VUZ)
         cursor.close()
         conn.close()
+        form_filter.federal_district.setEnabled(False)
+        form_filter.region.setEnabled(False)
+        form_filter.city.setEnabled(False)
+        form_filter.VUZ.setEnabled(False)
         return
     cursor.execute(f'''SELECT distinct ВУЗы."город" FROM "{table_name}" INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = {table_name}.[код ВУЗа]''')
     res = cursor.fetchall()
@@ -843,6 +872,9 @@ def fill_filter_table():
         form_filter.city.setCurrentText(city)
         cursor.close()
         conn.close()
+        form_filter.federal_district.setEnabled(False)
+        form_filter.region.setEnabled(False)
+        form_filter.city.setEnabled(False)
         return
     cursor.execute(f'''SELECT distinct ВУЗы."область" FROM "{table_name}" INNER JOIN ВУЗы ON ВУЗы.[код ВУЗа] = {table_name}.[код ВУЗа]''')
     res = cursor.fetchall()
@@ -850,6 +882,8 @@ def fill_filter_table():
         region = str(res[0])
         region = region[2:len(region)-3]
         form_filter.region.setCurrentText(region)
+        form_filter.federal_district.setEnabled(False)
+        form_filter.region.setEnabled(False)
         cursor.close()
         conn.close()
         return
@@ -859,6 +893,7 @@ def fill_filter_table():
         federal_district = str(res[0])
         federal_district = federal_district[2:len(federal_district)-3]
         form_filter.federal_district.setCurrentText(federal_district)
+        form_filter.federal_district.setEnabled(False)
         cursor.close()
         conn.close()
         return
